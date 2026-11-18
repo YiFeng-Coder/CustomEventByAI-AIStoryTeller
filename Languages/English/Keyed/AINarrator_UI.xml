@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <AI_Choice_Title>Decision</AI_Choice_Title>
+
+  <!-- ═══════════ Debug window ═══════════ -->
+  <AI_Debug_Title>AI Narrator · Debug</AI_Debug_Title>
+  <AI_Debug_RequestOnce>Request once</AI_Debug_RequestOnce>
+  <AI_Debug_ForceWriter>Force-write Lua</AI_Debug_ForceWriter>
+  <AI_Debug_InjectSample>Inject sample</AI_Debug_InjectSample>
+  <AI_Debug_RebuildCandidates>Rescan</AI_Debug_RebuildCandidates>
+  <AI_Debug_ClearHistory>Clear log</AI_Debug_ClearHistory>
+  <AI_Debug_InjectDemo>Inject demo</AI_Debug_InjectDemo>
+  <AI_Debug_LuaDisabledTip>Lua story events are disabled in mod settings</AI_Debug_LuaDisabledTip>
+  <AI_Debug_ConceptLabel>Concept (optional)</AI_Debug_ConceptLabel>
+  <AI_Debug_DefQueryLabel>Def query (kind/keyword)</AI_Debug_DefQueryLabel>
+  <AI_Debug_TestQuery>Test query</AI_Debug_TestQuery>
+  <AI_Debug_RebuildIndex>Rebuild index</AI_Debug_RebuildIndex>
+  <AI_Debug_DefIndexRebuilt>DefIndex rebuilt</AI_Debug_DefIndexRebuilt>
+  <AI_Debug_QueryFormat>Format: kind/keyword, e.g. item/medicine</AI_Debug_QueryFormat>
+  <AI_Debug_QueryFailed>Query failed: {0}</AI_Debug_QueryFailed>
+  <AI_Debug_QueryException>Query threw {0}: {1}</AI_Debug_QueryException>
+  <AI_Debug_SampleRegisterFailed>Failed to register the sample event: {0}</AI_Debug_SampleRegisterFailed>
+  <AI_Debug_SampleStartFailed>Failed to start the sample event: {0}</AI_Debug_SampleStartFailed>
+  <AI_Debug_SampleStarted>Sample event started (consumes no API calls)</AI_Debug_SampleStarted>
+  <AI_Debug_DemoRegisterFailed>Failed to register the P4 demo: {0}</AI_Debug_DemoRegisterFailed>
+  <AI_Debug_DemoStartFailed>Failed to start the P4 demo: {0}</AI_Debug_DemoStartFailed>
+  <AI_Debug_DemoStarted>P4 demo started (consumes no API calls)</AI_Debug_DemoStarted>
+
+  <AI_Debug_StatusLine>Status: {0}</AI_Debug_StatusLine>
+  <AI_Debug_PhaseLine>Phase: {0}   Director busy: {1}   Writer busy: {2}   Queued concept: {3}</AI_Debug_PhaseLine>
+  <AI_Debug_InfluenceLine>Colonist protection: {0}</AI_Debug_InfluenceLine>
+  <AI_Debug_CountsLine>Candidates: {0}   Actions: {1}   Visible this run: {2}</AI_Debug_CountsLine>
+  <AI_Debug_LookupLine>Def lookup: director {0}   writer {1}</AI_Debug_LookupLine>
+  <AI_Debug_TestQueryHeader>— test query —</AI_Debug_TestQueryHeader>
+  <AI_Debug_FailLine>Consecutive failures: {0}   Calls today: {1}/{2}</AI_Debug_FailLine>
+  <AI_Debug_PendingLine>Pending events: {0}</AI_Debug_PendingLine>
+  <AI_Debug_QuotaLine>Quota: {0}</AI_Debug_QuotaLine>
+  <AI_Debug_ObjectiveLine>Active narrative objective: {0}</AI_Debug_ObjectiveLine>
+  <AI_Debug_HistoryHeader>Recent events:</AI_Debug_HistoryHeader>
+  <AI_Debug_PromptHeader>— last prompt —</AI_Debug_PromptHeader>
+  <AI_Debug_WriterPromptHeader>— last writer prompt —</AI_Debug_WriterPromptHeader>
+  <AI_Debug_ResponseHeader>— last response —</AI_Debug_ResponseHeader>
+  <AI_Debug_RuntimeHeader>— story runtime —</AI_Debug_RuntimeHeader>
+  <AI_Debug_LastStageLine>Last stage: {0}</AI_Debug_LastStageLine>
+  <AI_Debug_ActiveEventsHeader>Active events:</AI_Debug_ActiveEventsHeader>
+  <AI_Debug_InstanceLine>- {0}   def {1}   stage {2}{3}   timers {4}{5}</AI_Debug_InstanceLine>
+  <AI_Debug_DoneSuffix>   [finished]</AI_Debug_DoneSuffix>
+  <AI_Debug_ErrorSuffix>   error: {0}</AI_Debug_ErrorSuffix>
+  <AI_Debug_ScriptPreviewHeader>— last script (truncated) —</AI_Debug_ScriptPreviewHeader>
+
+</LanguageData>

@@ -10,8 +10,8 @@
   -->
   <StorytellerDef ParentName="BaseStoryteller">
     <defName>Stellaris_AINarrator</defName>
-    <label>AI 叙述者</label>
-    <description>由大语言模型担任叙事导演。它会读取殖民地状况，自主决定何时发事件、何时休整，并能现场编写多阶段剧情。</description>
+    <label>AI Narrator</label>
+    <description>A large language model serves as your colony's narrative director. It reads the state of the colony, decides for itself when to send an incident and when to hold back, and can write multi-stage storylines on the spot.</description>
     <portraitLarge>UI/HeroArt/Storytellers/RandyRandom</portraitLarge>
     <portraitTiny>UI/HeroArt/Storytellers/RandyRandomTiny</portraitTiny>
     <listOrder>25</listOrder>

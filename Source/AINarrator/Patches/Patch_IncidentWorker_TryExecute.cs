@@ -36,7 +36,7 @@ namespace Stellaris.AI
                     tick = Find.TickManager.TicksGame,
                     defName = __instance.def.defName,
                     category = __instance.def.category != null ? __instance.def.category.defName : "",
-                    reason = "(原版触发)",
+                    reason = Loc.Pick("(原版触发)", "(vanilla trigger)"),
                     fromAi = false,
                     fired = true
                 }, maxRecords);
@@ -59,7 +59,8 @@ namespace Stellaris.AI
     /// <summary>把 AI 原版事件的来源与实际发射参数绑定，记账一次。</summary>
     internal static class AiIncidentHistory
     {
-        internal const string Rejected = "游戏未能触发该事件（CanFireNow 或 TryExecute 为假）";
+        internal static string Rejected => Loc.Pick("游戏未能触发该事件（CanFireNow 或 TryExecute 为假）",
+            "the game could not fire this incident (CanFireNow or TryExecute returned false)");
 
         private sealed class Attempt
         {
@@ -78,24 +79,26 @@ namespace Stellaris.AI
         {
             parms = null;
             if (!BudgetPolicy.CanUse(candidate, state, now, AINarratorMod.Settings, out error)) return false;
-            if (map == null) { error = "没有可用地图"; return false; }
+            if (map == null) { error = Loc.Pick("没有可用地图", "no map available"); return false; }
 
             try
             {
                 if (candidate.Def.requireColonistsPresent && map.mapPawns.FreeColonistsSpawnedCount == 0)
                 {
-                    error = "当前地图没有该事件所需的殖民者";
+                    error = Loc.Pick("当前地图没有该事件所需的殖民者",
+                        "the current map has none of the colonists this incident requires");
                     return false;
                 }
 
                 parms = StorytellerUtility.DefaultParmsNow(candidate.Def.category, map);
-                if (parms == null) { error = "无法构造事件参数"; return false; }
+                if (parms == null) { error = Loc.Pick("无法构造事件参数", "could not build incident parms"); return false; }
                 parms.points = StorytellerUtility.DefaultThreatPointsNow(map) * multiplier;
                 return true;
             }
             catch (Exception e)
             {
-                error = "构造事件参数失败：" + e.Message;
+                error = Loc.Pick("构造事件参数失败：" + e.Message,
+                    "building incident parms failed: " + e.Message);
                 return false;
             }
         }
@@ -106,12 +109,14 @@ namespace Stellaris.AI
             try
             {
                 if (candidate.Def.Worker.CanFireNow(parms)) return true;
-                error = candidate.DefName + " 当前不可触发";
+                error = Loc.Pick(candidate.DefName + " 当前不可触发",
+                    candidate.DefName + " cannot fire right now");
                 return false;
             }
             catch (Exception e)
             {
-                error = "CanFireNow 异常：" + e.Message;
+                error = Loc.Pick("CanFireNow 异常：" + e.Message,
+                    "CanFireNow threw: " + e.Message);
                 return false;
             }
         }
@@ -149,7 +154,10 @@ namespace Stellaris.AI
                 !ReferenceEquals(firing.def, attempt.Candidate.Def) || !Attempts.Remove(firing.parms))
                 return;
 
-            string reason = exception == null ? (fired ? attempt.Reason : Rejected) : "事件执行异常：" + exception.Message;
+            string reason = exception == null
+                ? (fired ? attempt.Reason : Rejected)
+                : Loc.Pick("事件执行异常：" + exception.Message,
+                    "incident execution threw: " + exception.Message);
             Record(attempt.State, attempt.Candidate, attempt.Tick, reason, fired && exception == null);
         }
 

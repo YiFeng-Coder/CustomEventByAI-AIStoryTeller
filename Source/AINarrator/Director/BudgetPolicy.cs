@@ -19,13 +19,13 @@ namespace Stellaris.AI
 
             if (candidate == null)
             {
-                reason = "候选为空";
+                reason = Loc.Pick("候选为空", "candidate is null");
                 return false;
             }
 
             if (state == null)
             {
-                reason = "状态未加载";
+                reason = Loc.Pick("状态未加载", "state not loaded");
                 return false;
             }
 
@@ -45,8 +45,10 @@ namespace Stellaris.AI
                     if (!string.Equals(r.defName, candidate.DefName)) continue;
                     if (nowTick - r.tick < repeatTicks)
                     {
-                        reason = candidate.DefName + " 在 " + settings.repeatWindowDays + " 天内刚发生过（第 "
-                                 + (r.tick / 60000) + " 天）";
+                        reason = Loc.Pick(candidate.DefName + " 在 " + settings.repeatWindowDays + " 天内刚发生过（第 "
+                                 + (r.tick / 60000) + " 天）",
+                            candidate.DefName + " fired within the last " + settings.repeatWindowDays
+                            + " days (day " + (r.tick / 60000) + ")");
                         return false;
                     }
 
@@ -61,8 +63,10 @@ namespace Stellaris.AI
                 int used = CountRecent(state, candidate.Category, settings.quotaWindow);
                 if (used >= cap)
                 {
-                    reason = candidate.Category + " 最近 " + settings.quotaWindow + " 个事件里已用 "
-                             + used + "/" + cap;
+                    reason = Loc.Pick(candidate.Category + " 最近 " + settings.quotaWindow + " 个事件里已用 "
+                             + used + "/" + cap,
+                            candidate.Category + " used " + used + "/" + cap + " in the last "
+                            + settings.quotaWindow + " events");
                     return false;
                 }
             }
@@ -72,7 +76,9 @@ namespace Stellaris.AI
                 IsThreat(candidate.Category) &&
                 ConsecutiveThreats(state) >= settings.consecutiveThreatLimit)
             {
-                reason = "最近连续 " + settings.consecutiveThreatLimit + " 次都是威胁，要求先休整";
+                reason = Loc.Pick("最近连续 " + settings.consecutiveThreatLimit + " 次都是威胁，要求先休整",
+                    "the last " + settings.consecutiveThreatLimit
+                    + " events were all threats; a breather is required first");
                 return false;
             }
 
@@ -141,15 +147,16 @@ namespace Stellaris.AI
             parts.Add(DescribeOne(state, settings, "ThreatSmall", settings.threatSmallQuota));
             parts.Add(DescribeOne(state, settings, "Misc", settings.miscQuota));
             parts.Add(settings.consecutiveThreatLimit > 0
-                ? "连续威胁 " + ConsecutiveThreats(state) + "/" + settings.consecutiveThreatLimit
-                : "连续威胁 不限制");
+                ? Loc.Pick("连续威胁 " + ConsecutiveThreats(state) + "/" + settings.consecutiveThreatLimit,
+                    "consecutive threats " + ConsecutiveThreats(state) + "/" + settings.consecutiveThreatLimit)
+                : Loc.Pick("连续威胁 不限制", "consecutive threats unlimited"));
             return string.Join(" | ", parts.ToArray());
         }
 
         private static string DescribeOne(NarratorState state, AINarratorSettings settings,
             string category, int cap)
         {
-            if (cap <= 0 || settings.quotaWindow <= 0) return category + " 不限制";
+            if (cap <= 0 || settings.quotaWindow <= 0) return Loc.Pick(category + " 不限制", category + " unlimited");
             return category + " " + CountRecent(state, category, settings.quotaWindow) + "/" + cap;
         }
     }

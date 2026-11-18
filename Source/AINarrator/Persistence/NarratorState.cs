@@ -96,10 +96,12 @@ namespace Stellaris.AI
             for (int i = start; i < history.Count; i++)
             {
                 HistoryRecord r = history[i];
-                sb.Append("- 第").Append(r.tick / 60000).Append("天 ")
-                  .Append(r.defName)
-                  .Append("（").Append(string.IsNullOrEmpty(r.category) ? "?" : r.category).Append("）")
-                  .Append(r.fired ? "" : " [未执行]")
+                sb.Append(Loc.Pick("- 第" + (r.tick / 60000) + "天 " + r.defName
+                        + "（" + (string.IsNullOrEmpty(r.category) ? "?" : r.category) + "）"
+                        + (r.fired ? "" : " [未执行]"),
+                    "- day " + (r.tick / 60000) + " " + r.defName
+                        + " (" + (string.IsNullOrEmpty(r.category) ? "?" : r.category) + ")"
+                        + (r.fired ? "" : " [not fired]")))
                   .Append('\n');
             }
 

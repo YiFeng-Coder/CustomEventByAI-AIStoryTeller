@@ -92,7 +92,8 @@ namespace Stellaris.AI
                 }
 
                 if (!await request.TryAuthorizeAttemptAsync(ct).ConfigureAwait(false))
-                    return LlmResult.Failure(LlmErrorKind.QuotaExceeded, "今日 API 调用已达上限");
+                    return LlmResult.Failure(LlmErrorKind.QuotaExceeded,
+                        Loc.Pick("今日 API 调用已达上限", "daily API call limit reached"));
 
                 using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 timeoutCts.CancelAfter(TimeSpan.FromSeconds(Math.Max(5, request.TimeoutSeconds)));
@@ -216,7 +217,9 @@ namespace Stellaris.AI
         {
             string snippet = Trim(body, 300);
             if (status >= 300 && status < 400)
-                return LlmResult.Failure(LlmErrorKind.Unknown, "HTTP " + status + ": 请填写重定向后的接口地址");
+                return LlmResult.Failure(LlmErrorKind.Unknown,
+                    Loc.Pick("HTTP " + status + ": 请填写重定向后的接口地址",
+                        "HTTP " + status + ": use the endpoint URL after the redirect"));
             if (status == 401 || status == 403)
                 return LlmResult.Failure(LlmErrorKind.Auth, "HTTP " + status + ": " + snippet);
             if (status == 429)

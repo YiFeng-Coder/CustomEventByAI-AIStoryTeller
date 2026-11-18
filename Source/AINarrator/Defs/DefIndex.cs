@@ -91,6 +91,23 @@ namespace Stellaris.AI
             return result;
         }
 
+        /// <summary>按过滤后的确定顺序取前 limit 条；小类别用来在目录里列全名。</summary>
+        public static List<DefEntry> ListEntries(string kindId, int limit)
+        {
+            var result = new List<DefEntry>();
+            DefKind kind = DefKindRegistry.Get(kindId);
+            if (kind == null || limit <= 0) return result;
+
+            List<DefEntry> entries = GetEntries(kind);
+            for (int i = 0; i < entries.Count && result.Count < limit; i++)
+            {
+                if (!PassesRuntime(kind, entries[i])) continue;
+                result.Add(entries[i]);
+            }
+
+            return result;
+        }
+
         /// <summary>确定性搜索。返回当前页；total 是过滤后的全部命中数。</summary>
         public static List<DefEntry> Search(string kindId, string query, int limit, int offset,
             out int total, out string error)
@@ -101,7 +118,8 @@ namespace Stellaris.AI
             DefKind kind = DefKindRegistry.Get(kindId);
             if (kind == null)
             {
-                error = "未知的 Def 类别：" + (kindId ?? "") + "；可用类别：" + DefKindRegistry.ValidIds();
+                error = Loc.Pick("未知的 Def 类别：" + (kindId ?? "") + "；可用类别：" + DefKindRegistry.ValidIds(),
+                    "Unknown Def kind: " + (kindId ?? "") + "; available kinds: " + DefKindRegistry.ValidIds());
                 return new List<DefEntry>();
             }
 
@@ -161,7 +179,8 @@ namespace Stellaris.AI
 
             if (total == 0)
             {
-                sb.Append("没有匹配。换更短的关键词，或换一个 kind。\n");
+                sb.Append(Loc.Pick("没有匹配。换更短的关键词，或换一个 kind。\n",
+                    "No match. Try a shorter keyword, or a different kind.\n"));
                 return sb.ToString();
             }
 
@@ -189,7 +208,7 @@ namespace Stellaris.AI
 
                 if (!string.IsNullOrEmpty(entry.Mod))
                 {
-                    sb.Append(" | 来源 ").Append(OneLine(entry.Mod, 60));
+                    sb.Append(Loc.Pick(" | 来源 ", " | mod ")).Append(OneLine(entry.Mod, 60));
                 }
 
                 sb.Append('\n');
@@ -197,8 +216,9 @@ namespace Stellaris.AI
 
             if (offset + shown < total)
             {
-                sb.Append("更多：offset=").Append(offset + shown)
-                  .Append("；换关键词请再查一次。\n");
+                sb.Append(Loc.Pick("更多：offset=", "more: offset=")).Append(offset + shown)
+                  .Append(Loc.Pick("；换关键词请再查一次。\n",
+                      "; change the keyword and query again.\n"));
             }
 
             return sb.ToString();
@@ -213,7 +233,7 @@ namespace Stellaris.AI
             var sb = new StringBuilder(256);
             for (int i = 0; i < examples.Count; i++)
             {
-                if (i > 0) sb.Append("、");
+                if (i > 0) sb.Append(Loc.Pick("、", ", "));
                 sb.Append(examples[i].DefName);
                 if (!string.IsNullOrEmpty(examples[i].Label) &&
                     !string.Equals(examples[i].Label, examples[i].DefName, StringComparison.Ordinal))
@@ -242,34 +262,52 @@ namespace Stellaris.AI
         }
 
         /// <summary>
-        /// 目录：每类只给总数 + 3 个跨模组示例。它不是白名单，真正的白名单是
+        /// 小类别（≤12 条）在目录里直接列全名。灵感只有 8 种，如果只给 3 个示例，
+        /// 模型永远看不到“手术灵感 / 创作灵感”这些真正想指定的名字。
+        /// </summary>
+        private const int FullListLimit = 12;
+
+        /// <summary>
+        /// 目录：小类别列全名，大类别给总数 + 3 个跨模组示例。它不是白名单，真正的白名单是
         /// ActionRegistry.ValidateAll 里的 DefDatabase 查询。
         /// </summary>
         public static string BuildCatalog(ActionCategoryMask mask, LookupSession lookup,
             AINarratorSettings settings)
         {
             var sb = new StringBuilder(1200);
-            sb.Append("\n【Def 目录】下面是每类的总数和几个示例（不是全部）。\n");
+            sb.Append(Loc.Pick(
+                "\n【Def 目录】下面是每类的总数；条数少的类别直接列全名，大类别只给几个示例。\n",
+                "\n[Def catalog] Totals per kind are below; kinds with few entries list every name, "
+                + "large kinds show only a few examples.\n"));
 
             bool canLookup = settings != null && settings.enableDefLookup &&
                              lookup != null && lookup.CanLookup(settings);
 
             if (canLookup)
             {
-                sb.Append("需要具体名字时：单独输出一行\n")
-                  .Append("LOOKUP: {\"kind\":\"item\",\"q\":\"药\",\"limit\":")
+                sb.Append(Loc.Pick("需要具体名字时：单独输出一行\n",
+                    "To look up an exact name, output a line by itself:\n"))
+                  .Append(Loc.Pick("LOOKUP: {\"kind\":\"item\",\"q\":\"药\",\"limit\":",
+                      "LOOKUP: {\"kind\":\"item\",\"q\":\"medicine\",\"limit\":"))
                   .Append(settings != null ? settings.lookupMaxResults : 8).Append("}\n")
-                  .Append("我会把匹配结果贴回来（最多 ").Append(lookup.MaxRounds)
-                  .Append(" 轮，剩余 ").Append(lookup.RoundsLeft).Append(" 轮）。\n");
+                  .Append(Loc.Pick("我会把匹配结果贴回来（最多 ", "I will paste the matches back (at most "))
+                  .Append(lookup.MaxRounds)
+                  .Append(Loc.Pick(" 轮，剩余 ", " rounds, ")).Append(lookup.RoundsLeft)
+                  .Append(Loc.Pick(" 轮）。\n", " left).\n"));
             }
             else
             {
-                sb.Append("本轮不提供 LOOKUP。可以直接写 @类别/关键词（例如 @item/药），")
-                  .Append("或从示例里选精确名字。\n");
+                sb.Append(Loc.Pick("本轮不提供 LOOKUP。可以直接写 @类别/关键词（例如 @item/药），",
+                    "LOOKUP is not available this round. You can write @kind/keyword directly "
+                    + "(for example @item/medicine), "))
+                  .Append(Loc.Pick("或从示例里选精确名字。\n",
+                      "or pick an exact name from the examples.\n"));
             }
 
-            sb.Append("所有 Def 参数都可以写精确 defName，也可以写 @类别/关键词；")
-              .Append("类别见每行开头的英文 id。\n");
+            sb.Append(Loc.Pick("所有 Def 参数都可以写精确 defName，也可以写 @类别/关键词；",
+                "Every Def parameter accepts an exact defName or @kind/keyword; "))
+              .Append(Loc.Pick("类别见每行开头的英文 id。\n",
+                  "the kind ids are the English ids at the start of each line.\n"));
 
             List<DefKind> kinds = DefKindRegistry.ForMask(mask);
             if (kinds.Count == 0) return "";
@@ -278,16 +316,20 @@ namespace Stellaris.AI
             {
                 DefKind kind = kinds[i];
                 int count = Count(kind.Id);
-                sb.Append(kind.Label).Append(' ').Append(kind.Id)
-                  .Append("：共 ").Append(count).Append(" 个");
+                sb.Append(Loc.Pick(kind.Label + " " + kind.Id + "：共 " + count + " 个",
+                    kind.Label + " (" + kind.Id + "): " + count + " total"));
 
-                List<DefEntry> examples = Examples(kind.Id, 3);
+                // 小类别直接列全名：灵感 8 种、屋顶 5 种这种规模，列全比“猜 + LOOKUP”便宜。
+                bool fullList = count > 0 && count <= FullListLimit;
+                List<DefEntry> examples = fullList
+                    ? ListEntries(kind.Id, FullListLimit)
+                    : Examples(kind.Id, 3);
                 if (examples.Count > 0)
                 {
-                    sb.Append("；例：");
+                    sb.Append(fullList ? Loc.Pick("，全部：", " — all: ") : Loc.Pick("；例：", " — e.g. "));
                     for (int e = 0; e < examples.Count; e++)
                     {
-                        if (e > 0) sb.Append('、');
+                        if (e > 0) sb.Append(Loc.Pick("、", ", "));
                         DefEntry entry = examples[e];
                         sb.Append(entry.DefName);
                         if (!string.IsNullOrEmpty(entry.Label) &&
@@ -296,7 +338,10 @@ namespace Stellaris.AI
                             sb.Append('(').Append(entry.Label).Append(')');
                         }
 
-                        if (!string.IsNullOrEmpty(entry.Mod)) sb.Append('，').Append(entry.Mod);
+                        if (!string.IsNullOrEmpty(entry.Mod))
+                        {
+                            sb.Append(Loc.Pick("，", ", ")).Append(entry.Mod);
+                        }
                     }
                 }
 

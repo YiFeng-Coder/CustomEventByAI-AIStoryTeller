@@ -39,24 +39,30 @@ namespace Stellaris.AI
             var issues = new List<string>();
             if (string.IsNullOrWhiteSpace(source))
             {
-                issues.Add("脚本为空");
+                issues.Add(Loc.Pick("脚本为空", "The script is empty"));
                 return issues;
             }
 
             if (!Regex.IsMatch(source, @"function\s+run\s*\("))
             {
-                issues.Add("必须定义全局函数 run(ctx, state)");
+                issues.Add(Loc.Pick("必须定义全局函数 run(ctx, state)",
+                    "You must define the global function run(ctx, state)"));
             }
 
             if (!source.Contains("rim.aist.json_encode"))
             {
-                issues.Add("必须用 rim.aist.json_encode({...}) 返回结果，否则游戏读不到动作");
+                issues.Add(Loc.Pick("必须用 rim.aist.json_encode({...}) 返回结果，否则游戏读不到动作",
+                    "Return the result with rim.aist.json_encode({...}), otherwise the game cannot read "
+                    + "any actions"));
             }
 
             Match forbidden = Forbidden.Match(source);
             if (forbidden.Success)
             {
-                issues.Add("使用了沙箱禁止的接口：" + forbidden.Value.Trim() + "（只有 string/table/math 可用）");
+                issues.Add(Loc.Pick(
+                    "使用了沙箱禁止的接口：" + forbidden.Value.Trim() + "（只有 string/table/math 可用）",
+                    "Uses an API the sandbox forbids: " + forbidden.Value.Trim()
+                    + " (only string/table/math are available)"));
             }
 
             var known = new HashSet<string>(StringComparer.Ordinal);
@@ -73,29 +79,37 @@ namespace Stellaris.AI
                 string type = match.Groups[1].Value;
                 if (known.Count > 0 && !known.Contains(type))
                 {
-                    issues.Add("未知的动作类型 \"" + type + "\"（只能用动作手册里列出的 type）");
+                    issues.Add(Loc.Pick("未知的动作类型 \"" + type + "\"（只能用动作手册里列出的 type）",
+                        "Unknown action type \"" + type + "\" (use only the types listed in the action manual)"));
                 }
             }
 
             if (!source.Contains("ctx.trigger") && !source.Contains("trigger =="))
             {
-                issues.Add("脚本没有检查 ctx.trigger，无法区分不同阶段");
+                issues.Add(Loc.Pick("脚本没有检查 ctx.trigger，无法区分不同阶段",
+                    "The script never checks ctx.trigger, so it cannot tell the stages apart"));
             }
             else if (!source.Contains("\"start\"") && !source.Contains("'start'"))
             {
-                issues.Add("脚本没有处理 trigger == \"start\"：事件启动时就是这个触发，不处理会导致开局空转");
+                issues.Add(Loc.Pick("脚本没有处理 trigger == \"start\"：事件启动时就是这个触发，不处理会导致开局空转",
+                    "The script does not handle trigger == \"start\": the event begins with that trigger, "
+                    + "and without it the opening stage does nothing"));
             }
 
             bool usesChoices = source.Contains("story.show_choices") || source.Contains("story.choice_letter");
             if (usesChoices && !source.Contains("choice_selected"))
             {
-                issues.Add("用了选项类动作（show_choices / choice_letter），但没有处理 trigger == \"choice_selected\"，"
-                           + "玩家选完剧情会卡住");
+                issues.Add(Loc.Pick(
+                    "用了选项类动作（show_choices / choice_letter），但没有处理 trigger == \"choice_selected\"，"
+                    + "玩家选完剧情会卡住",
+                    "Uses a choice action (show_choices / choice_letter) but does not handle "
+                    + "trigger == \"choice_selected\", so the story stalls after the player chooses"));
             }
 
             if (!allowLong && TimerWord.IsMatch(source))
             {
-                issues.Add("玩家关闭了长线事件，脚本里不能出现 timer");
+                issues.Add(Loc.Pick("玩家关闭了长线事件，脚本里不能出现 timer",
+                    "The player disabled long-running events, so the script must not use timer"));
             }
 
             return issues;

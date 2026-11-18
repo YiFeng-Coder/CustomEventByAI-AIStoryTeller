@@ -20,10 +20,10 @@ namespace Stellaris.AI
         public const int MaxDefinitions = 16;
         public const int InstanceTtlTicks = 60000 * 5;
 
-        public static string LastStatus { get; private set; } = "(还没有任何剧情事件)";
+        public static string LastStatus { get; private set; } = Loc.Pick("(还没有任何剧情事件)", "(no story events yet)");
 
         /// <summary>最近一次阶段到底产出了什么（调试窗用）。</summary>
-        public static string LastPlanSummary { get; private set; } = "(尚未执行任何阶段)";
+        public static string LastPlanSummary { get; private set; } = Loc.Pick("(尚未执行任何阶段)", "(no stages executed yet)");
 
         /// <summary>最近一次执行过的脚本片段（调试窗用，截断）。</summary>
         public static string LastScriptPreview { get; private set; } = "";
@@ -59,7 +59,7 @@ namespace Stellaris.AI
             error = null;
 
             NarratorWorldComponent comp = NarratorWorldComponent.Instance;
-            if (comp == null) { error = "世界状态未就绪"; return false; }
+            if (comp == null) { error = Loc.Pick("世界状态未就绪", "world state is not ready"); return false; }
 
             // 先做静态体检：只查确定性错误，避免误杀。
             bool allowLong = AINarratorMod.Settings != null && AINarratorMod.Settings.enableLongEvents;
@@ -68,7 +68,8 @@ namespace Stellaris.AI
 
             if (issues.Count > 0)
             {
-                error = "脚本体检未通过：" + string.Join("；", issues.ToArray());
+                error = Loc.Pick("脚本体检未通过：" + string.Join("；", issues.ToArray()),
+                    "script lint failed: " + string.Join("; ", issues.ToArray()));
                 return false;
             }
 
@@ -89,7 +90,7 @@ namespace Stellaris.AI
             definition = new EventDefinitionRecord
             {
                 id = "evtdef_" + (++state.eventSeq),
-                title = string.IsNullOrEmpty(title) ? "未命名剧情" : title,
+                title = string.IsNullOrEmpty(title) ? Loc.Pick("未命名剧情", "Untitled story") : title,
                 script = script,
                 hash = hash,
                 createdTick = Find.TickManager.TicksGame
@@ -122,11 +123,12 @@ namespace Stellaris.AI
         /// </summary>
         public static string PreviewBranches(EventDefinitionRecord definition)
         {
-            if (definition == null) return "事件定义为空";
+            if (definition == null) return Loc.Pick("事件定义为空", "event definition is null");
 
             string error = PreviewStage(definition, "start", null, "{}", new List<object>(),
                 null, "", false, out StagePlan startPlan, out Dictionary<string, string> startHandles);
-            if (error != null) return "start 分支空跑失败：" + error;
+            if (error != null) return Loc.Pick("start 分支空跑失败：" + error,
+                "dry run of the start branch failed: " + error);
             if (startPlan.Done) return null;
 
             List<object> receipts = PlannedReceipts(startPlan);
@@ -143,7 +145,8 @@ namespace Stellaris.AI
                     receipts, startHandles, startPlan.Stage, startPlan.Timers.Count > 0, out _, out _);
                 if (error != null)
                 {
-                    return "choice_selected 分支（choice=\"" + choice + "\"）空跑失败：" + error;
+                    return Loc.Pick("choice_selected 分支（choice=\"" + choice + "\"）空跑失败：" + error,
+                        "dry run of the choice_selected branch (choice=\"" + choice + "\") failed: " + error);
                 }
             }
 
@@ -161,7 +164,8 @@ namespace Stellaris.AI
                     receipts, startHandles, startPlan.Stage, canContinueAfterTimer, out _, out _);
                 if (error != null)
                 {
-                    return "定时分支（signal=\"" + firstTimer.signal + "\"）空跑失败：" + error;
+                    return Loc.Pick("定时分支（signal=\"" + firstTimer.signal + "\"）空跑失败：" + error,
+                        "dry run of the timer branch (signal=\"" + firstTimer.signal + "\") failed: " + error);
                 }
             }
 
@@ -180,7 +184,7 @@ namespace Stellaris.AI
             validatedHandles = null;
 
             Map map = Find.AnyPlayerHomeMap;
-            if (map == null) return "没有玩家基地地图";
+            if (map == null) return Loc.Pick("没有玩家基地地图", "no player home map");
 
             var context = new ActionContext
             {
@@ -208,7 +212,8 @@ namespace Stellaris.AI
             catch (Exception e)
             {
                 // 空跑本身不许把主循环带崩：任何意外都折成"这条脚本不能用"。
-                return "空跑异常：" + e.GetType().Name + ": " + e.Message;
+                return Loc.Pick("空跑异常：" + e.GetType().Name + ": " + e.Message,
+                    "dry run threw: " + e.GetType().Name + ": " + e.Message);
             }
 
             if (!outcome.Ok) return outcome.Error;
@@ -221,7 +226,8 @@ namespace Stellaris.AI
             }
             catch (Exception e)
             {
-                return "空跑校验异常：" + e.GetType().Name + ": " + e.Message;
+                return Loc.Pick("空跑校验异常：" + e.GetType().Name + ": " + e.Message,
+                    "dry run validation threw: " + e.GetType().Name + ": " + e.Message);
             }
             finally
             {
@@ -241,14 +247,18 @@ namespace Stellaris.AI
             // 与 RunStage 同样的"空阶段 / 悬空"判定：这两类错误现在也会在开演前被拦下。
             if (plan.Actions.Count == 0 && plan.Timers.Count == 0)
             {
-                return "该阶段没有任何动作或定时器"
+                return Loc.Pick("该阶段没有任何动作或定时器"
                        + (plan.Done ? "（且声明了 done，直接结束）" : "")
-                       + "；通常是 ctx.trigger 判断没匹配上，或 actions 没写成数组";
+                       + "；通常是 ctx.trigger 判断没匹配上，或 actions 没写成数组",
+                    "this stage has no actions and no timers"
+                       + (plan.Done ? " (it also declares done, so it ends immediately)" : "")
+                       + "; usually the ctx.trigger check does not match, or actions was not built as an array");
             }
 
             if (!plan.Done && !canContinue && plan.Timers.Count == 0 && !WaitsForChoice(plan.Actions))
             {
-                return "该阶段既不结束也不等待：没有 done、没有 timer、也没有让玩家选择";
+                return Loc.Pick("该阶段既不结束也不等待：没有 done、没有 timer、也没有让玩家选择",
+                    "this stage neither ends nor waits: no done, no timer, and nothing for the player to choose");
             }
 
             if (plan.Actions.Count == 0)
@@ -325,8 +335,8 @@ namespace Stellaris.AI
             executionStarted = false;
 
             NarratorWorldComponent comp = NarratorWorldComponent.Instance;
-            if (comp == null) { error = "世界状态未就绪"; return false; }
-            if (definition == null) { error = "事件定义为空"; return false; }
+            if (comp == null) { error = Loc.Pick("世界状态未就绪", "world state is not ready"); return false; }
+            if (definition == null) { error = Loc.Pick("事件定义为空", "event definition is null"); return false; }
 
             NarratorState state = comp.State;
 
@@ -339,7 +349,8 @@ namespace Stellaris.AI
 
             if (active >= MaxActiveInstances)
             {
-                error = "同时活跃的剧情已达上限（" + MaxActiveInstances + "）";
+                error = Loc.Pick("同时活跃的剧情已达上限（" + MaxActiveInstances + "）",
+                    "too many active story events (limit " + MaxActiveInstances + ")");
                 return false;
             }
 
@@ -399,7 +410,8 @@ namespace Stellaris.AI
                 if (now - instance.lastTick > InstanceTtlTicks + 59)
                 {
                     instance.done = true;
-                    instance.lastError = "超过 5 游戏日未推进，自动回收";
+                    instance.lastError = Loc.Pick("超过 5 游戏日未推进，自动回收",
+                        "no progress for over 5 game days; recycled automatically");
                     state.instances.RemoveAt(i);
                     continue;
                 }
@@ -410,7 +422,7 @@ namespace Stellaris.AI
                     EventDefinitionRecord def = FindDefinition(state, instance.defId);
                     if (def == null)
                     {
-                        FailStage(instance, "事件定义丢失", out _);
+                        FailStage(instance, Loc.Pick("事件定义丢失", "event definition is missing"), out _);
                     }
                     else if (!RunStage(state, instance, def, timer.signal, null, out string error, out _))
                     {
@@ -475,7 +487,7 @@ namespace Stellaris.AI
             Map map = Find.AnyPlayerHomeMap;
             if (map == null)
             {
-                return FailStage(instance, "没有玩家基地地图", out error);
+                return FailStage(instance, Loc.Pick("没有玩家基地地图", "no player home map"), out error);
             }
 
             int now = Find.TickManager.TicksGame;
@@ -511,8 +523,9 @@ namespace Stellaris.AI
 
             StagePlan plan = outcome.Plan;
 
-            LastPlanSummary = "[" + trigger + "] 动作 " + plan.Actions.Count
-                              + " · 定时器 " + plan.Timers.Count
+            LastPlanSummary = "[" + trigger + "] "
+                              + Loc.Pick("动作 " + plan.Actions.Count + " · 定时器 " + plan.Timers.Count,
+                                  "actions " + plan.Actions.Count + " · timers " + plan.Timers.Count)
                               + " · done=" + plan.Done
                               + " · stage=" + (plan.Stage ?? "")
                               + " · next_state " + Trim(plan.NextStateJson, 120);
@@ -523,17 +536,22 @@ namespace Stellaris.AI
             // 以前这种情况被当成"成功但什么都没做"，玩家看到的就是"事件开了，毫无效果"。
             if (plan.Actions.Count == 0 && plan.Timers.Count == 0)
             {
-                string why = "trigger=\"" + trigger + "\" 阶段是空的：没有动作也没有定时器"
+                string why = Loc.Pick("trigger=\"" + trigger + "\" 阶段是空的：没有动作也没有定时器"
                              + (plan.Done ? "（且声明了 done，直接结束）" : "")
                              + "。通常是 ctx.trigger 判断与触发名不符（只认 start / game_timer_due / choice_selected），"
-                             + "或 actions 没写成数组（用 actions[#actions+1] 追加）。";
+                             + "或 actions 没写成数组（用 actions[#actions+1] 追加）。",
+                    "stage trigger=\"" + trigger + "\" is empty: no actions and no timers"
+                             + (plan.Done ? " (it also declares done, so it ends immediately)" : "")
+                             + ". Usually the ctx.trigger check does not match the trigger name (only start / game_timer_due / choice_selected are recognized),"
+                             + " or actions was not built as an array (append with actions[#actions+1]).");
                 Verse.Log.Warning(AINarratorMod.LogPrefix + "empty stage for " + instance.id + ": " + why);
                 return FailStage(instance, why, out error);
             }
 
             if (plan.Actions.Count > 32)
             {
-                return FailStage(instance, "单阶段动作数超过 32 条上限", out error);
+                return FailStage(instance, Loc.Pick("单阶段动作数超过 32 条上限",
+                    "a single stage exceeds the limit of 32 actions"), out error);
             }
 
             string scope = string.IsNullOrEmpty(instance.stageName) ? trigger : instance.stageName;
@@ -545,7 +563,8 @@ namespace Stellaris.AI
             bool awaitingChoice = (instance.awaitingChoice && trigger != "choice_selected") || WaitsForChoice(plan.Actions);
             if (!plan.Done && plan.Timers.Count == 0 && instance.timers.Count == 0 && !awaitingChoice)
             {
-                string why = "trigger=\"" + trigger + "\" 阶段既不结束，也没有等待定时器或玩家选择。";
+                string why = Loc.Pick("trigger=\"" + trigger + "\" 阶段既不结束，也没有等待定时器或玩家选择。",
+                    "stage trigger=\"" + trigger + "\" neither ends nor waits for a timer or a player choice.");
                 Verse.Log.Warning(AINarratorMod.LogPrefix + "dangling stage for " + instance.id);
                 return FailStage(instance, why, out error);
             }
@@ -554,7 +573,8 @@ namespace Stellaris.AI
             AINarratorSettings settings = AINarratorMod.Settings;
             if (settings != null && !settings.enableLongEvents && plan.Timers.Count > 0)
             {
-                string why = "玩家已关闭长线事件，但脚本注册了 timer。请改成在 start 阶段内完成的短线事件。";
+                string why = Loc.Pick("玩家已关闭长线事件，但脚本注册了 timer。请改成在 start 阶段内完成的短线事件。",
+                    "the player disabled long-running events, but the script registered a timer. Rewrite it as a short event that finishes inside the start stage.");
                 Verse.Log.Warning(AINarratorMod.LogPrefix + "long event rejected (disabled by player): " + instance.id);
                 return FailStage(instance, why, out error);
             }
@@ -570,7 +590,8 @@ namespace Stellaris.AI
             // 全量校验：一条非法就整阶段作废，绝不执行一半。
             if (!ActionRegistry.ValidateAll(plan.Actions, context, out string invalid))
             {
-                return FailStage(instance, "trigger=\"" + trigger + "\"：" + invalid, out error);
+                return FailStage(instance, Loc.Pick("trigger=\"" + trigger + "\"：" + invalid,
+                    "trigger=\"" + trigger + "\": " + invalid), out error);
             }
 
             return ApplyStage(plan, context, scope, trigger, awaitingChoice, out error, out executionStarted);
@@ -588,7 +609,8 @@ namespace Stellaris.AI
             {
                 if (!ActionRegistry.TryGet(action.type, out IGameActionHandler handler))
                 {
-                    return FailStage(instance, "未注册的动作类型：" + action.type, out error);
+                    return FailStage(instance, Loc.Pick("未注册的动作类型：" + action.type,
+                        "unregistered action type: " + action.type), out error);
                 }
 
                 executionStarted = true;
@@ -596,7 +618,8 @@ namespace Stellaris.AI
                 {
                     if (!handler.TryExecute(action, context, out string actionError))
                     {
-                        string reason = action.type + " 执行失败：" + actionError;
+                        string reason = Loc.Pick(action.type + " 执行失败：" + actionError,
+                            action.type + " failed: " + actionError);
                         AddReceipt(instance, action, false, actionError);
                         return FailStage(instance, reason, out error);
                     }
@@ -608,16 +631,18 @@ namespace Stellaris.AI
                 {
                     AddReceipt(instance, action, false, e.Message);
                     Verse.Log.Error(AINarratorMod.LogPrefix + "action " + action.type + " failed: " + e);
-                    return FailStage(instance, action.type + " 执行异常：" + e.Message, out error);
+                    return FailStage(instance, Loc.Pick(action.type + " 执行异常：" + e.Message,
+                        action.type + " threw: " + e.Message), out error);
                 }
             }
 
             CommitStage(instance, plan, context.Now, awaitingChoice);
 
             LastStatus = (!string.IsNullOrEmpty(context.Definition.title) ? context.Definition.title : instance.id)
-                         + " · 阶段 " + (instance.stageName.Length > 0 ? instance.stageName : "?")
-                         + " · 执行 " + executed + " 个动作"
-                         + (instance.done ? " · 已结束" : "");
+                         + Loc.Pick(" · 阶段 ", " · stage ")
+                         + (instance.stageName.Length > 0 ? instance.stageName : "?")
+                         + Loc.Pick(" · 执行 " + executed + " 个动作", " · " + executed + " actions executed")
+                         + (instance.done ? Loc.Pick(" · 已结束", " · finished") : "");
 
             if (AINarratorMod.Settings != null && AINarratorMod.Settings.debugLogging)
             {
@@ -658,7 +683,7 @@ namespace Stellaris.AI
             instance.done = true;
             instance.awaitingChoice = false;
             instance.timers.Clear();
-            LastStatus = "阶段失败：" + reason;
+            LastStatus = Loc.Pick("阶段失败：" + reason, "stage failed: " + reason);
             return false;
         }
 

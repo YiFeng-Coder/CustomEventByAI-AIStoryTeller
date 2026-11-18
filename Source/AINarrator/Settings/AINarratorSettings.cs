@@ -100,9 +100,9 @@ namespace Stellaris.AI
         {
             switch (value)
             {
-                case InfluenceNever: return "不允许";
-                case InfluencePsychology: return "仅心理层";
-                default: return "全部";
+                case InfluenceNever: return Loc.T("AI_Influence_Never");
+                case InfluencePsychology: return Loc.T("AI_Influence_Psychology");
+                default: return Loc.T("AI_Influence_Everything");
             }
         }
 

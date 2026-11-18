@@ -22,6 +22,8 @@ namespace Stellaris.AI
     {
         public const string Help = "handle:p1 / colonist:名字 / best:技能名 / worst:Mood";
 
+        private const string HelpEn = "handle:p1 / colonist:name / best:skillDefName / worst:Mood";
+
         public static bool TryResolve(PlannedAction action, ActionContext context, TargetPolicy policy,
             bool socialCategory, out Pawn pawn, out string error)
         {
@@ -32,7 +34,7 @@ namespace Stellaris.AI
             if (who.Length == 0) who = action.ArgString("handle").Trim();
             if (who.Length == 0)
             {
-                error = "缺少 who（写法：" + Help + "）";
+                error = Loc.Pick("缺少 who（写法：" + Help + "）", "Missing who (use: " + HelpEn + ")");
                 return false;
             }
 
@@ -48,7 +50,7 @@ namespace Stellaris.AI
 
             if (string.IsNullOrEmpty(who))
             {
-                error = "缺少目标";
+                error = Loc.Pick("缺少目标", "Missing target");
                 return false;
             }
 
@@ -77,18 +79,25 @@ namespace Stellaris.AI
                     // 裸名字：先当句柄，再当殖民者名字。
                     if (TryHandle(context, who, out pawn, out _)) break;
                     if (TryByName(context, who, out pawn, out error)) break;
-                    error = "找不到 \"" + who + "\"：既不是句柄，也不是你的殖民者名字。写法：" + Help;
+                    error = Loc.Pick("找不到 \"" + who + "\"：既不是句柄，也不是你的殖民者名字。写法：" + Help,
+                        "Cannot find \"" + who + "\": it is neither a handle nor the name of one of your "
+                        + "colonists. Use: " + HelpEn);
                     return false;
 
                 default:
-                    error = "未知的 who 前缀 \"" + kind + "\"；写法：" + Help;
+                    error = Loc.Pick("未知的 who 前缀 \"" + kind + "\"；写法：" + Help,
+                        "Unknown who prefix \"" + kind + "\"; use: " + HelpEn);
                     return false;
             }
 
             // 校验已通过的生成动作后，可以先确认句柄的类型，实际生成后再检查角色状态和派系。
             if (pawn == null) return true;
-            if (pawn.Dead) { error = "目标已经死亡"; return false; }
-            if (!pawn.Spawned) { error = "目标不在任何地图上"; return false; }
+            if (pawn.Dead) { error = Loc.Pick("目标已经死亡", "The target is already dead"); return false; }
+            if (!pawn.Spawned)
+            {
+                error = Loc.Pick("目标不在任何地图上", "The target is not on any map");
+                return false;
+            }
 
             if (!CheckPolicy(pawn, policy, socialCategory, out error)) return false;
             return true;
@@ -105,16 +114,16 @@ namespace Stellaris.AI
             {
                 case TargetPolicy.Dangerous:
                     return RequireInfluence(AINarratorSettings.InfluenceEverything,
-                        "伤害 / 击杀 / 精神崩溃", out error);
+                        "伤害 / 击杀 / 精神崩溃", "harm / kill / mental break", out error);
 
                 case TargetPolicy.NonPlayerOnly:
                     return RequireInfluence(AINarratorSettings.InfluencePsychology,
-                        "特质 / 关系 / 技能 / 派系", out error);
+                        "特质 / 关系 / 技能 / 派系", "trait / relation / skill / faction", out error);
 
                 case TargetPolicy.Neutral:
                     if (!socialCategory) return true;
                     return RequireInfluence(AINarratorSettings.InfluencePsychology,
-                        "想法 / 心情", out error);
+                        "想法 / 心情", "thought / mood", out error);
 
                 default:
                     return true;
@@ -125,7 +134,7 @@ namespace Stellaris.AI
         /// 玩家在设置里给"AI 对我的殖民者的影响"划的线。
         /// 这里是硬校验：设置不够就报一条能照着改的错误，而不是静默跳过。
         /// </summary>
-        private static bool RequireInfluence(int needed, string what, out string error)
+        private static bool RequireInfluence(int needed, string whatZh, string whatEn, out string error)
         {
             error = null;
 
@@ -135,11 +144,17 @@ namespace Stellaris.AI
 
             if (current >= needed) return true;
 
-            error = "玩家把「AI 对你的殖民者的影响」设成了「"
-                    + AINarratorSettings.InfluenceLabel(current)
-                    + "」，所以不能用「" + what + "」类动作指向你的殖民者。"
-                    + "允许的话，请在 设置 → 动作库 里改成「"
-                    + AINarratorSettings.InfluenceLabel(needed) + "」或更高。";
+            error = Loc.Pick(
+                "玩家把「AI 对你的殖民者的影响」设成了「"
+                + AINarratorSettings.InfluenceLabel(current)
+                + "」，所以不能用「" + whatZh + "」类动作指向你的殖民者。"
+                + "允许的话，请在 设置 → 动作库 里改成「"
+                + AINarratorSettings.InfluenceLabel(needed) + "」或更高。",
+                "The player set \"AI influence on your colonists\" to \""
+                + AINarratorSettings.InfluenceLabel(current)
+                + "\", so " + whatEn + " actions cannot target your colonists. "
+                + "If that should be allowed, change it to \""
+                + AINarratorSettings.InfluenceLabel(needed) + "\" or higher in Settings → Action library.");
             return false;
         }
 
@@ -174,7 +189,8 @@ namespace Stellaris.AI
                 if (colonists[i] != null) names.Add(colonists[i].LabelShort);
             }
 
-            error = "没有叫 \"" + name + "\" 的殖民者；当前是：" + string.Join("、", names.ToArray());
+            error = Loc.Pick("没有叫 \"" + name + "\" 的殖民者；当前是：" + string.Join("、", names.ToArray()),
+                "No colonist named \"" + name + "\"; current colonists: " + string.Join(", ", names.ToArray()));
             return false;
         }
 
@@ -186,7 +202,7 @@ namespace Stellaris.AI
             List<Pawn> colonists = Colonists(context);
             if (colonists.Count == 0)
             {
-                error = "地图上没有殖民者";
+                error = Loc.Pick("地图上没有殖民者", "There are no colonists on this map");
                 return false;
             }
 
@@ -194,7 +210,8 @@ namespace Stellaris.AI
             SkillDef skill = byMood ? null : FindSkill(what);
             if (!byMood && skill == null)
             {
-                error = "best/worst 后面只能是 Mood 或某个技能 DefName（例如 Shooting）";
+                error = Loc.Pick("best/worst 后面只能是 Mood 或某个技能 DefName（例如 Shooting）",
+                    "best/worst only accept Mood or a skill DefName (for example Shooting)");
                 return false;
             }
 
@@ -229,7 +246,8 @@ namespace Stellaris.AI
 
             if (picked == null)
             {
-                error = "找不到可比较的殖民者（可能都被禁用或没有对应技能）";
+                error = Loc.Pick("找不到可比较的殖民者（可能都被禁用或没有对应技能）",
+                    "No comparable colonist found (they may all be disabled or lack that skill)");
                 return false;
             }
 

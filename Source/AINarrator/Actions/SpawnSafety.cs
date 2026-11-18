@@ -18,26 +18,31 @@ namespace Stellaris.AI
 
             if (def == null)
             {
-                error = "定义不存在";
+                error = Loc.Pick("定义不存在", "That definition does not exist");
                 return false;
             }
 
             if (def.thingClass == null)
             {
-                error = def.defName + " 没有可实例化的 ThingClass";
+                error = Loc.Pick(def.defName + " 没有可实例化的 ThingClass",
+                    def.defName + " has no instantiable ThingClass");
                 return false;
             }
 
             if (def.category == ThingCategory.Pawn)
             {
-                error = def.defName + " 是角色，请用 pawn.spawn 生成";
+                error = Loc.Pick(def.defName + " 是角色，请用 pawn.spawn 生成",
+                    def.defName + " is a pawn; spawn it with pawn.spawn");
                 return false;
             }
 
             if (def.MadeFromStuff)
             {
-                error = def.defName + " 需要材质（MadeFromStuff），不能用这个动作直接生成；"
-                        + "请换一个成品定义，或改用 map.building（它支持 stuff）";
+                error = Loc.Pick(
+                    def.defName + " 需要材质（MadeFromStuff），不能用这个动作直接生成；"
+                    + "请换一个成品定义，或改用 map.building（它支持 stuff）",
+                    def.defName + " needs stuff (MadeFromStuff), so this action cannot spawn it directly; "
+                    + "use a finished def instead, or use map.building (which accepts stuff)");
                 return false;
             }
 

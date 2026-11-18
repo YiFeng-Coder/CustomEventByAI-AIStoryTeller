@@ -22,10 +22,15 @@ namespace Stellaris.AI
 
         internal static string RejectSpecialPawnKind(string defName, PawnKindDef kind)
         {
-            string typeName = kind != null ? kind.GetType().Name : "未知子类";
-            return defName + " 使用特殊 PawnKindDef 子类 " + typeName
-                   + "，需要原版事件或专用生成器初始化；pawn.spawn / map.corpse 只接受普通 PawnKindDef。"
-                   + "请改用普通 pawnKind，或用 incident.fire 触发原版事件";
+            string typeName = kind != null ? kind.GetType().Name : Loc.Pick("未知子类", "unknown subclass");
+            return Loc.Pick(
+                defName + " 使用特殊 PawnKindDef 子类 " + typeName
+                + "，需要原版事件或专用生成器初始化；pawn.spawn / map.corpse 只接受普通 PawnKindDef。"
+                + "请改用普通 pawnKind，或用 incident.fire 触发原版事件",
+                defName + " uses the special PawnKindDef subclass " + typeName
+                + ", which must be initialized by a vanilla incident or a dedicated generator; "
+                + "pawn.spawn / map.corpse only accept a plain PawnKindDef. "
+                + "Use a plain pawnKind instead, or fire the vanilla incident with incident.fire");
         }
 
         /// <summary>

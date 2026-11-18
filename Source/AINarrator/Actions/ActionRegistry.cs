@@ -303,7 +303,8 @@ namespace Stellaris.AI
                 PlannedAction action = actions[i];
                 if (count > 32)
                 {
-                    error = "单阶段动作数超过 32 条上限";
+                    error = Loc.Pick("单阶段动作数超过 32 条上限",
+                        "A stage cannot contain more than 32 actions");
                     return false;
                 }
 
@@ -311,21 +312,26 @@ namespace Stellaris.AI
 
                 if (!TryGet(action.type, out IGameActionHandler handler))
                 {
-                    error = "未注册的动作类型：" + action.type;
+                    error = Loc.Pick("未注册的动作类型：" + action.type,
+                        "Unregistered action type: " + action.type);
                     return false;
                 }
 
                 if (!ActionSelector.IsEnabled(handler.Category, AINarratorMod.Settings))
                 {
-                    error = action.type + " 所属动作组已在设置中关闭";
+                    error = Loc.Pick(action.type + " 所属动作组已在设置中关闭",
+                        "The action group of " + action.type + " is disabled in settings");
                     return false;
                 }
 
                 context.ValidatingActionNumber = count;
                 if (!handler.Validate(action, context, out string itemError))
                 {
-                    string op = string.IsNullOrEmpty(action.opId) ? "" : "（opId=\"" + action.opId + "\"）";
-                    error = $"第 {count} 条动作{op} {action.type} 校验失败：{itemError}";
+                    string op = string.IsNullOrEmpty(action.opId)
+                        ? ""
+                        : Loc.Pick("（opId=\"" + action.opId + "\"）", " (opId=\"" + action.opId + "\")");
+                    error = Loc.Pick($"第 {count} 条动作{op} {action.type} 校验失败：{itemError}",
+                        $"Action {count}{op} {action.type} failed validation: {itemError}");
                     return false;
                 }
 

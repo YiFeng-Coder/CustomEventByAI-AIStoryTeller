@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <AI_Choice_Title>抉择</AI_Choice_Title>
+
+  <!-- ═══════════ 调试窗 ═══════════ -->
+  <AI_Debug_Title>AI 叙述者 · 调试</AI_Debug_Title>
+  <AI_Debug_RequestOnce>立即请求一次</AI_Debug_RequestOnce>
+  <AI_Debug_ForceWriter>强制写 Lua 剧情</AI_Debug_ForceWriter>
+  <AI_Debug_InjectSample>注入示例事件</AI_Debug_InjectSample>
+  <AI_Debug_RebuildCandidates>重扫候选表</AI_Debug_RebuildCandidates>
+  <AI_Debug_ClearHistory>清空历史</AI_Debug_ClearHistory>
+  <AI_Debug_InjectDemo>注入 P4 演示</AI_Debug_InjectDemo>
+  <AI_Debug_LuaDisabledTip>已在 Mod 设置里关闭 Lua 剧情事件</AI_Debug_LuaDisabledTip>
+  <AI_Debug_ConceptLabel>剧情概念（可留空）</AI_Debug_ConceptLabel>
+  <AI_Debug_DefQueryLabel>Def 查询（kind/关键词）</AI_Debug_DefQueryLabel>
+  <AI_Debug_TestQuery>测试查询</AI_Debug_TestQuery>
+  <AI_Debug_RebuildIndex>重建索引</AI_Debug_RebuildIndex>
+  <AI_Debug_DefIndexRebuilt>DefIndex 已重建</AI_Debug_DefIndexRebuilt>
+  <AI_Debug_QueryFormat>格式：kind/关键词，例如 item/药</AI_Debug_QueryFormat>
+  <AI_Debug_QueryFailed>查询失败：{0}</AI_Debug_QueryFailed>
+  <AI_Debug_QueryException>查询异常：{0}: {1}</AI_Debug_QueryException>
+  <AI_Debug_SampleRegisterFailed>示例事件注册失败：{0}</AI_Debug_SampleRegisterFailed>
+  <AI_Debug_SampleStartFailed>示例事件启动失败：{0}</AI_Debug_SampleStartFailed>
+  <AI_Debug_SampleStarted>示例事件已启动（不消耗任何 API 调用）</AI_Debug_SampleStarted>
+  <AI_Debug_DemoRegisterFailed>P4 演示注册失败：{0}</AI_Debug_DemoRegisterFailed>
+  <AI_Debug_DemoStartFailed>P4 演示启动失败：{0}</AI_Debug_DemoStartFailed>
+  <AI_Debug_DemoStarted>P4 演示已启动（不消耗任何 API 调用）</AI_Debug_DemoStarted>
+
+  <AI_Debug_StatusLine>状态：{0}</AI_Debug_StatusLine>
+  <AI_Debug_PhaseLine>阶段：{0}　导演在途：{1}　编剧在途：{2}　排队概念：{3}</AI_Debug_PhaseLine>
+  <AI_Debug_InfluenceLine>殖民者保护：{0}</AI_Debug_InfluenceLine>
+  <AI_Debug_CountsLine>候选总数：{0}　动作总数：{1}　本次可见：{2}</AI_Debug_CountsLine>
+  <AI_Debug_LookupLine>Def 查询：导演 {0}　编剧 {1}</AI_Debug_LookupLine>
+  <AI_Debug_TestQueryHeader>—— 测试查询 ——</AI_Debug_TestQueryHeader>
+  <AI_Debug_FailLine>连续失败：{0}　今日调用：{1}/{2}</AI_Debug_FailLine>
+  <AI_Debug_PendingLine>待发事件：{0}</AI_Debug_PendingLine>
+  <AI_Debug_QuotaLine>配额：{0}</AI_Debug_QuotaLine>
+  <AI_Debug_ObjectiveLine>当前叙事目标：{0}</AI_Debug_ObjectiveLine>
+  <AI_Debug_HistoryHeader>最近事件史：</AI_Debug_HistoryHeader>
+  <AI_Debug_PromptHeader>—— 最近一次 prompt ——</AI_Debug_PromptHeader>
+  <AI_Debug_WriterPromptHeader>—— 最近一次编剧 prompt ——</AI_Debug_WriterPromptHeader>
+  <AI_Debug_ResponseHeader>—— 最近一次回复 ——</AI_Debug_ResponseHeader>
+  <AI_Debug_RuntimeHeader>—— 剧情运行时 ——</AI_Debug_RuntimeHeader>
+  <AI_Debug_LastStageLine>最近阶段：{0}</AI_Debug_LastStageLine>
+  <AI_Debug_ActiveEventsHeader>活跃事件：</AI_Debug_ActiveEventsHeader>
+  <AI_Debug_InstanceLine>- {0}　定义 {1}　阶段 {2}{3}　定时器 {4}{5}</AI_Debug_InstanceLine>
+  <AI_Debug_DoneSuffix>　[已结束]</AI_Debug_DoneSuffix>
+  <AI_Debug_ErrorSuffix>　错误：{0}</AI_Debug_ErrorSuffix>
+  <AI_Debug_ScriptPreviewHeader>—— 最近脚本（截断）——</AI_Debug_ScriptPreviewHeader>
+
+</LanguageData>

@@ -36,7 +36,7 @@ namespace Stellaris.AI
             var req = new DefLookupRequest();
             if (root.ValueKind != JsonValueKind.Object)
             {
-                error = "查询必须是一个 JSON 对象";
+                error = Loc.Pick("查询必须是一个 JSON 对象", "The query must be a JSON object");
                 return null;
             }
 
@@ -60,13 +60,15 @@ namespace Stellaris.AI
 
             if (req.Kind.Length == 0)
             {
-                error = "查询缺少 kind（例如 item / weapon / incident）";
+                error = Loc.Pick("查询缺少 kind（例如 item / weapon / incident）",
+                    "The query is missing kind (for example item / weapon / incident)");
                 return null;
             }
 
             if (DefKindRegistry.Get(req.Kind) == null)
             {
-                error = "未知的 Def 类别：" + req.Kind + "；可用类别：" + DefKindRegistry.ValidIds();
+                error = Loc.Pick("未知的 Def 类别：" + req.Kind + "；可用类别：" + DefKindRegistry.ValidIds(),
+                    "Unknown Def kind: " + req.Kind + "; available kinds: " + DefKindRegistry.ValidIds());
                 return null;
             }
 
@@ -112,7 +114,12 @@ namespace Stellaris.AI
         public List<DefEntry> Entries = new List<DefEntry>();
 
         public static DefLookupResult Failure(string error) =>
-            new DefLookupResult { Ok = false, Error = error ?? "", Text = "查询失败：" + (error ?? "") };
+            new DefLookupResult
+            {
+                Ok = false,
+                Error = error ?? "",
+                Text = Loc.Pick("查询失败：" + (error ?? ""), "Query failed: " + (error ?? ""))
+            };
     }
 
     public sealed class DefResolution
@@ -139,20 +146,27 @@ namespace Stellaris.AI
             }
             catch (Exception e)
             {
-                return DefLookupResult.Failure("查询异常：" + e.GetType().Name + ": " + e.Message);
+                return DefLookupResult.Failure(Loc.Pick(
+                    "查询异常：" + e.GetType().Name + ": " + e.Message,
+                    "Lookup error: " + e.GetType().Name + ": " + e.Message));
             }
         }
 
         private static DefLookupResult SearchCore(DefLookupRequest request, Map map, NarratorState state,
             AINarratorSettings settings, int now)
         {
-            if (request == null) return DefLookupResult.Failure("查询为空");
+            if (request == null)
+            {
+                return DefLookupResult.Failure(Loc.Pick("查询为空", "The query is empty"));
+            }
             request.Normalize();
 
             if (DefKindRegistry.Get(request.Kind) == null)
             {
-                return DefLookupResult.Failure("未知的 Def 类别：" + request.Kind
-                    + "；可用类别：" + DefKindRegistry.ValidIds());
+                return DefLookupResult.Failure(Loc.Pick(
+                    "未知的 Def 类别：" + request.Kind + "；可用类别：" + DefKindRegistry.ValidIds(),
+                    "Unknown Def kind: " + request.Kind + "; available kinds: "
+                    + DefKindRegistry.ValidIds()));
             }
 
             if (string.Equals(request.Kind, "incident", StringComparison.OrdinalIgnoreCase))
@@ -181,8 +195,10 @@ namespace Stellaris.AI
             DefKind kind = DefKindRegistry.Get(kindId);
             if (kind == null)
             {
-                resolution.Error = "未知的 Def 类别：" + (kindId ?? "")
-                    + "；可用类别：" + DefKindRegistry.ValidIds();
+                resolution.Error = Loc.Pick(
+                    "未知的 Def 类别：" + (kindId ?? "") + "；可用类别：" + DefKindRegistry.ValidIds(),
+                    "Unknown Def kind: " + (kindId ?? "") + "; available kinds: "
+                    + DefKindRegistry.ValidIds());
                 return resolution;
             }
 
@@ -208,16 +224,23 @@ namespace Stellaris.AI
             {
                 if (kind.Id == "incident")
                 {
-                    resolution.Error = "@incident/" + (query ?? "") + " 没有匹配且当前可触发的原版事件。"
-                        + "可用本次提示词中的精确 DefName。没有适合的候选时，请移除 incident.fire，改用其它有效动作。";
+                    resolution.Error = Loc.Pick(
+                        "@incident/" + (query ?? "") + " 没有匹配且当前可触发的原版事件。"
+                        + "可用本次提示词中的精确 DefName。没有适合的候选时，请移除 incident.fire，改用其它有效动作。",
+                        "@incident/" + (query ?? "")
+                        + " matches no vanilla incident that can fire right now. Use an exact DefName from "
+                        + "this prompt. If nothing fits, remove incident.fire and use another valid action.");
                     return resolution;
                 }
 
                 string examples = DefIndex.ExamplesText(kind.Id, 5);
-                resolution.Error = "@" + kind.Id + "/" + (query ?? "")
-                    + " 没有匹配。"
+                resolution.Error = Loc.Pick(
+                    "@" + kind.Id + "/" + (query ?? "") + " 没有匹配。"
                     + (examples.Length > 0 ? " " + kind.Label + " 的示例：" + examples + "。" : "")
-                    + "请换更短的关键词，或先用 LOOKUP 查一次。";
+                    + "请换更短的关键词，或先用 LOOKUP 查一次。",
+                    "No match for @" + kind.Id + "/" + (query ?? "") + ". "
+                    + (examples.Length > 0 ? "Examples of " + kind.Label + ": " + examples + ". " : "")
+                    + "Try a shorter keyword, or run a LOOKUP first.");
                 return resolution;
             }
 
@@ -233,7 +256,11 @@ namespace Stellaris.AI
         private static DefLookupResult SearchIncidents(DefLookupRequest request, Map map,
             NarratorState state, AINarratorSettings settings, int now)
         {
-            if (map == null) return DefLookupResult.Failure("没有玩家基地地图，无法查询事件");
+            if (map == null)
+            {
+                return DefLookupResult.Failure(Loc.Pick("没有玩家基地地图，无法查询事件",
+                    "There is no player colony map, so incidents cannot be looked up"));
+            }
 
             float points = StorytellerUtility.DefaultThreatPointsNow(map);
             string normalized = DefEntry.NormalizeText(request.Query);

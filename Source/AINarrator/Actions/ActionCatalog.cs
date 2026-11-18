@@ -137,7 +137,7 @@ namespace Stellaris.AI
             d => d != null,
             max);
 
-        public static string InspirationList(int max = 8) => Collect(
+        public static string InspirationList(int max = 12) => Collect(
             DefDatabase<InspirationDef>.AllDefs,
             d => d != null,
             max);
@@ -173,32 +173,34 @@ namespace Stellaris.AI
             bool scene = wants(ActionCategory.Scene);
             bool world = wants(ActionCategory.World);
 
-            if (spawn || scene) sb.Append("物品(thing.spawn / story.reward / map.drop_pod)：").Append(ThingList()).Append('\n');
-            if (scene) sb.Append("建筑(map.building)：").Append(BuildingList()).Append('\n');
-            if (spawn || scene) sb.Append("角色与动物(pawn.spawn / map.corpse / map.animal)：").Append(PawnKindList()).Append('\n');
-            if (map) sb.Append("天气(map.weather)：").Append(WeatherList()).Append('\n');
-            if (map) sb.Append("状况(map.condition)：").Append(ConditionList()).Append('\n');
-            if (map) sb.Append("伤害类型(map.damage)：").Append(DamageList()).Append('\n');
-            if (map) sb.Append("植物(map.plant)：").Append(PlantList()).Append('\n');
-            if (pawn) sb.Append("负面状态(pawn.hurt / pawn.heal)：").Append(HediffList()).Append('\n');
-            if (pawn) sb.Append("技能(pawn.set_skill / best:技能)：").Append(SkillList()).Append('\n');
-            if (pawn) sb.Append("衣物(pawn.gear slot=apparel)：").Append(ApparelList()).Append('\n');
-            if (pawn) sb.Append("武器(pawn.gear slot=weapon)：").Append(WeaponList()).Append('\n');
-            if (world) sb.Append("研究(research.grant)：").Append(ResearchList()).Append('\n');
-            if (world) sb.Append("任务模板(quest.start)：").Append(QuestList()).Append('\n');
-            if (world) sb.Append("派系(faction.goodwill)：").Append(FactionList()).Append('\n');
-            if (social) sb.Append("想法(pawn.thought)：").Append(ThoughtList()).Append('\n');
-            if (social) sb.Append("精神状态(pawn.mental)：").Append(MentalStateList()).Append('\n');
-            if (social) sb.Append("特质(pawn.trait)：").Append(TraitList()).Append('\n');
-            if (social) sb.Append("关系(pawn.relation)：").Append(RelationList()).Append('\n');
-            if (social) sb.Append("灵感(pawn.inspiration)：").Append(InspirationList()).Append('\n');
-            if (scene) sb.Append("地形(map.terrain)：").Append(TerrainList()).Append('\n');
-            if (scene) sb.Append("屋顶(map.roof，写 none 表示拆掉)：").Append(RoofList()).Append('\n');
-            if (scene) sb.Append("污渍(map.filth)：").Append(FilthList()).Append('\n');
+            if (spawn || scene) sb.Append(Loc.Pick("物品(thing.spawn / story.reward / map.drop_pod)：", "Items (thing.spawn / story.reward / map.drop_pod): ")).Append(ThingList()).Append('\n');
+            if (scene) sb.Append(Loc.Pick("建筑(map.building)：", "Buildings (map.building): ")).Append(BuildingList()).Append('\n');
+            if (spawn || scene) sb.Append(Loc.Pick("角色与动物(pawn.spawn / map.corpse / map.animal)：", "Characters and animals (pawn.spawn / map.corpse / map.animal): ")).Append(PawnKindList()).Append('\n');
+            if (map) sb.Append(Loc.Pick("天气(map.weather)：", "Weather (map.weather): ")).Append(WeatherList()).Append('\n');
+            if (map) sb.Append(Loc.Pick("状况(map.condition)：", "Conditions (map.condition): ")).Append(ConditionList()).Append('\n');
+            if (map) sb.Append(Loc.Pick("伤害类型(map.damage)：", "Damage types (map.damage): ")).Append(DamageList()).Append('\n');
+            if (map) sb.Append(Loc.Pick("植物(map.plant)：", "Plants (map.plant): ")).Append(PlantList()).Append('\n');
+            if (pawn) sb.Append(Loc.Pick("负面状态(pawn.hurt / pawn.heal)：", "Negative conditions (pawn.hurt / pawn.heal): ")).Append(HediffList()).Append('\n');
+            if (pawn) sb.Append(Loc.Pick("技能(pawn.set_skill / best:技能)：", "Skills (pawn.set_skill / best:skill): ")).Append(SkillList()).Append('\n');
+            if (pawn) sb.Append(Loc.Pick("衣物(pawn.gear slot=apparel)：", "Apparel (pawn.gear slot=apparel): ")).Append(ApparelList()).Append('\n');
+            if (pawn) sb.Append(Loc.Pick("武器(pawn.gear slot=weapon)：", "Weapons (pawn.gear slot=weapon): ")).Append(WeaponList()).Append('\n');
+            if (world) sb.Append(Loc.Pick("研究(research.grant)：", "Research (research.grant): ")).Append(ResearchList()).Append('\n');
+            if (world) sb.Append(Loc.Pick("任务模板(quest.start)：", "Quest templates (quest.start): ")).Append(QuestList()).Append('\n');
+            if (world) sb.Append(Loc.Pick("派系(faction.goodwill)：", "Factions (faction.goodwill): ")).Append(FactionList()).Append('\n');
+            if (social) sb.Append(Loc.Pick("想法(pawn.thought)：", "Thoughts (pawn.thought): ")).Append(ThoughtList()).Append('\n');
+            if (social) sb.Append(Loc.Pick("精神状态(pawn.mental)：", "Mental states (pawn.mental): ")).Append(MentalStateList()).Append('\n');
+            if (social) sb.Append(Loc.Pick("特质(pawn.trait)：", "Traits (pawn.trait): ")).Append(TraitList()).Append('\n');
+            if (social) sb.Append(Loc.Pick("关系(pawn.relation)：", "Relations (pawn.relation): ")).Append(RelationList()).Append('\n');
+            if (social) sb.Append(Loc.Pick("灵感(pawn.inspiration)：", "Inspirations (pawn.inspiration): ")).Append(InspirationList()).Append('\n');
+            if (scene) sb.Append(Loc.Pick("地形(map.terrain)：", "Terrain (map.terrain): ")).Append(TerrainList()).Append('\n');
+            if (scene) sb.Append(Loc.Pick("屋顶(map.roof，写 none 表示拆掉)：", "Roofs (map.roof; write none to remove): ")).Append(RoofList()).Append('\n');
+            if (scene) sb.Append(Loc.Pick("污渍(map.filth)：", "Filth (map.filth): ")).Append(FilthList()).Append('\n');
 
             if (sb.Length == 0) return "";
 
-            return "\n【可用的 DefName 名单】（只能从这些名字里选，写错会导致整段脚本被拒）\n" + sb;
+            return Loc.Pick(
+                "\n【可用的 DefName 名单】（只能从这些名字里选，写错会导致整段脚本被拒）\n",
+                "\n【Available DefNames】 (choose only from these names; a typo rejects the whole script)\n") + sb;
         }
     }
 }

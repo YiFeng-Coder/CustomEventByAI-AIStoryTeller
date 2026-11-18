@@ -73,14 +73,14 @@ namespace Stellaris.AI
         public static bool HasQueuedConcept => _queuedJob != null;
         public static string PhaseName => (DirectorBusy ? Phase.Directing : WriterBusy ? Phase.Writing : Phase.Idle).ToString();
         public static long LastRealtimeMs { get; private set; }
-        public static string LastStatus { get; private set; } = "(尚未请求)";
+        public static string LastStatus { get; private set; } = Loc.Pick("(尚未请求)", "(no request yet)");
         public static string LastPrompt { get; private set; } = "";
         public static string LastWriterPrompt { get; private set; } = "";
         public static string LastResponse { get; private set; } = "";
         public static string DirectorLookupStatus =>
-            _directorLookup != null ? _directorLookup.Status : "查询轮 0/0";
+            _directorLookup != null ? _directorLookup.Status : Loc.Pick("查询轮 0/0", "lookup round 0/0");
         public static string WriterLookupStatus =>
-            _writerLookup != null ? _writerLookup.Status : "查询轮 0/0";
+            _writerLookup != null ? _writerLookup.Status : Loc.Pick("查询轮 0/0", "lookup round 0/0");
 
         public static void Update()
         {
@@ -141,8 +141,10 @@ namespace Stellaris.AI
             AINarratorSettings settings = AINarratorMod.Settings;
             Map map = RefreshSession(settings);
             if (!CanRequestManually(map, settings)) return false;
-            if (!IsActiveStoryteller) return RefuseRequest("当前未选择 AI 叙述者");
-            if (DirectorBusy) return RefuseRequest("导演请求已在进行中");
+            if (!IsActiveStoryteller)
+                return RefuseRequest(Loc.Pick("当前未选择 AI 叙述者", "the AI storyteller is not selected right now"));
+            if (DirectorBusy)
+                return RefuseRequest(Loc.Pick("导演请求已在进行中", "a director request is already in flight"));
 
             return DispatchDirector(map, _state, settings, forced: true);
         }
@@ -157,20 +159,22 @@ namespace Stellaris.AI
             Map map = RefreshSession(settings);
             if (!CanRequestManually(map, settings)) return false;
             if (settings == null || !settings.enableLuaEvents)
-                return RefuseRequest("玩家已在 Mod 设置里关闭 Lua 剧情事件");
-            if (InFlight) return RefuseRequest("当前有请求正在进行");
+                return RefuseRequest(Loc.Pick("玩家已在 Mod 设置里关闭 Lua 剧情事件",
+                    "the player disabled Lua story events in the mod settings"));
+            if (InFlight) return RefuseRequest(Loc.Pick("当前有请求正在进行", "a request is already in progress"));
 
             if (string.IsNullOrWhiteSpace(concept))
             {
-                concept = "一支商队在附近失踪，玩家要决定是否派人搜寻，以及是否相信幸存者的说法。";
+                concept = Loc.Pick("一支商队在附近失踪，玩家要决定是否派人搜寻，以及是否相信幸存者的说法。",
+                    "A trade caravan has vanished nearby. The player must decide whether to send a search party, and whether to believe what the survivors say.");
             }
 
             var proposal = new Proposal
             {
                 Kind = ProposalKind.LuaEvent,
-                Title = "调试剧情",
+                Title = Loc.Pick("调试剧情", "Debug story"),
                 Concept = concept.Trim(),
-                Reason = "debug: 强制编剧"
+                Reason = Loc.Pick("debug: 强制编剧", "debug: forced writer")
             };
 
             _queuedJob = null;
@@ -190,7 +194,7 @@ namespace Stellaris.AI
         {
             if (!CanCallApi(state, settings))
             {
-                LastStatus = "拒绝：今日 API 调用已达上限";
+                LastStatus = Loc.Pick("拒绝：今日 API 调用已达上限", "refused: daily API call limit reached");
                 return false;
             }
 
@@ -198,7 +202,7 @@ namespace Stellaris.AI
             Snapshot snapshot = SnapshotBuilder.Build(map, state);
             if (snapshot == null)
             {
-                LastStatus = "快照构建失败";
+                LastStatus = Loc.Pick("快照构建失败", "snapshot build failed");
                 return false;
             }
 
@@ -206,8 +210,10 @@ namespace Stellaris.AI
                 state, settings, now, 16);
             if (candidates.Count == 0)
             {
-                LastStatus = "没有可用候选（当前局势下没有能触发的事件；威胁点数 "
-                             + snapshot.ThreatPoints.ToString("F0") + "）";
+                LastStatus = Loc.Pick("没有可用候选（当前局势下没有能触发的事件；威胁点数 "
+                             + snapshot.ThreatPoints.ToString("F0") + "）",
+                    "no usable candidates (nothing can fire in the current situation; threat points "
+                             + snapshot.ThreatPoints.ToString("F0") + ")");
                 return false;
             }
 
@@ -234,7 +240,8 @@ namespace Stellaris.AI
             LastWriterPrompt = "";
 
             Send(map, forced, Phase.Directing, request,
-                "导演请求中…" + (lookup != null ? " · 查询回合" : ""));
+                Loc.Pick("导演请求中…" + (lookup != null ? " · 查询回合" : ""),
+                    "director request in flight…" + (lookup != null ? " · lookup round" : "")));
             return true;
         }
 
@@ -256,7 +263,7 @@ namespace Stellaris.AI
             if (!CanStartLua(state, settings)) return false;
             if (!CanCallApi(state, settings))
             {
-                LastStatus = "拒绝：今日 API 调用已达上限";
+                LastStatus = Loc.Pick("拒绝：今日 API 调用已达上限", "refused: daily API call limit reached");
                 return false;
             }
 
@@ -264,7 +271,7 @@ namespace Stellaris.AI
             Snapshot snapshot = SnapshotBuilder.Build(job.Map, state);
             if (snapshot == null)
             {
-                LastStatus = "编剧阶段：快照构建失败";
+                LastStatus = Loc.Pick("编剧阶段：快照构建失败", "writer stage: snapshot build failed");
                 return false;
             }
 
@@ -307,8 +314,9 @@ namespace Stellaris.AI
 
             Send(job.Map, job.Forced, Phase.Writing, request,
                 _writerRetries > 0
-                    ? "编剧请求中…（第 " + (_writerRetries + 1) + " 轮，修正上一版错误）"
-                    : "编剧请求中…（写 Lua）");
+                    ? Loc.Pick("编剧请求中…（第 " + (_writerRetries + 1) + " 轮，修正上一版错误）",
+                        "writer request in flight… (round " + (_writerRetries + 1) + ", fixing the previous version)")
+                    : Loc.Pick("编剧请求中…（写 Lua）", "writer request in flight… (writing Lua)"));
             return true;
         }
 
@@ -321,7 +329,7 @@ namespace Stellaris.AI
             if (phase == Phase.Writing) _writerRequest = context;
             else _directorRequest = context;
 
-            LastStatus = (forced ? "[手动] " : "") + status + " (" + gateway.Name + ")";
+            LastStatus = (forced ? Loc.Pick("[手动] ", "[manual] ") : "") + status + " (" + gateway.Name + ")";
 
             request.AuthorizeAttemptAsync = ct => AuthorizeAttempt(context, ct);
             _ = Task.Run(async () =>
@@ -391,7 +399,7 @@ namespace Stellaris.AI
                 _lastWriterScript = null;
                 _lastWriterError = null;
                 _warnedNotConfigured = false;
-                LastStatus = "(尚未请求)";
+                LastStatus = Loc.Pick("(尚未请求)", "(no request yet)");
                 LastRealtimeMs = 0;
                 LastPrompt = "";
                 LastWriterPrompt = "";
@@ -433,7 +441,8 @@ namespace Stellaris.AI
 
             context = null;
             request.Cancellation.Cancel();
-            LastStatus = "请求已取消（存档、地图或自动触发条件变化）";
+            LastStatus = Loc.Pick("请求已取消（存档、地图或自动触发条件变化）",
+                "request cancelled (save, map, or auto-trigger condition changed)");
         }
 
         private static void ResetDailyCounters(NarratorState state, int now)
@@ -451,14 +460,16 @@ namespace Stellaris.AI
 
         private static bool CanRequestManually(Map map, AINarratorSettings settings)
         {
-            if (_state == null || map == null) return RefuseRequest("当前没有可用的殖民地地图");
-            if (settings == null || !settings.IsConfigured) return RefuseRequest("请先完成 API 配置");
+            if (_state == null || map == null)
+                return RefuseRequest(Loc.Pick("当前没有可用的殖民地地图", "no colony map is available right now"));
+            if (settings == null || !settings.IsConfigured)
+                return RefuseRequest(Loc.Pick("请先完成 API 配置", "configure the API first"));
             return true;
         }
 
         private static bool RefuseRequest(string reason)
         {
-            LastStatus = "拒绝：" + reason;
+            LastStatus = Loc.Pick("拒绝：" + reason, "refused: " + reason);
             return false;
         }
 
@@ -468,14 +479,16 @@ namespace Stellaris.AI
             // 甚至模型无视提示词硬写出来的脚本，都在这里被拦下，一次编剧调用都不发。
             if (settings == null || !settings.enableLuaEvents)
             {
-                LastStatus = "拒绝：玩家已在 Mod 设置里关闭 Lua 剧情事件";
+                LastStatus = Loc.Pick("拒绝：玩家已在 Mod 设置里关闭 Lua 剧情事件",
+                    "refused: the player disabled Lua story events in the mod settings");
                 return false;
             }
 
             if (settings.maxLuaEventsPerDay <= 0 || state.luaEventsToday < settings.maxLuaEventsPerDay)
                 return true;
 
-            LastStatus = "拒绝：今日剧情事件已达上限（" + settings.maxLuaEventsPerDay + "）";
+            LastStatus = Loc.Pick("拒绝：今日剧情事件已达上限（" + settings.maxLuaEventsPerDay + "）",
+                "refused: daily story event limit reached (" + settings.maxLuaEventsPerDay + ")");
             return false;
         }
 
@@ -521,13 +534,14 @@ namespace Stellaris.AI
                     LastResponse = "";
                     if (result.Kind == LlmErrorKind.QuotaExceeded)
                     {
-                        LastStatus = "拒绝：" + result.Error;
+                        LastStatus = Loc.Pick("拒绝：" + result.Error, "refused: " + result.Error);
                         return;
                     }
 
                     state.failStreak++;
                     state.lastFailTick = now;
-                    LastStatus = "失败(" + result.Kind + "): " + result.Error;
+                    LastStatus = Loc.Pick("失败(" + result.Kind + "): " + result.Error,
+                        "failed (" + result.Kind + "): " + result.Error);
                     Verse.Log.Warning(AINarratorMod.LogPrefix + "request failed: " + result);
                     return;
                 }
@@ -554,7 +568,7 @@ namespace Stellaris.AI
             {
                 state.failStreak++;
                 state.lastFailTick = Find.TickManager.TicksGame;
-                LastStatus = "提案非法：" + proposal.Error;
+                LastStatus = Loc.Pick("提案非法：" + proposal.Error, "invalid proposal: " + proposal.Error);
                 Verse.Log.Warning(AINarratorMod.LogPrefix + "invalid proposal: " + proposal.Error
                                   + " | raw=" + Trim(proposal.Raw, 200));
                 return;
@@ -568,27 +582,30 @@ namespace Stellaris.AI
                 if (!settings.enableDefLookup || _directorLookup == null ||
                     !_directorLookup.CanLookup(settings))
                 {
-                    LastStatus = "拒绝：查询轮不可用或已用尽";
+                    LastStatus = Loc.Pick("拒绝：查询轮不可用或已用尽",
+                        "refused: lookup rounds are unavailable or exhausted");
                     return;
                 }
 
                 if (!CanCallApi(state, settings))
                 {
-                    LastStatus = "拒绝：今日 API 调用已达上限，无法再查询";
+                    LastStatus = Loc.Pick("拒绝：今日 API 调用已达上限，无法再查询",
+                        "refused: daily API call limit reached, cannot look up again");
                     return;
                 }
 
                 proposal.Lookup.Limit = Math.Min(proposal.Lookup.Limit, settings.lookupMaxResults);
                 DefLookupResult result = DefQueryService.Search(proposal.Lookup, map, state, settings, now);
                 _directorLookup.Add(proposal.Lookup, result);
-                LastStatus = "导演查询：" + _directorLookup.Status;
+                LastStatus = Loc.Pick("导演查询：" + _directorLookup.Status,
+                    "director lookup: " + _directorLookup.Status);
                 DispatchDirector(map, state, settings, forced, _directorLookup);
                 return;
             }
 
             if (proposal.Kind == ProposalKind.Rest)
             {
-                LastStatus = "休整：" + proposal.Reason;
+                LastStatus = Loc.Pick("休整：" + proposal.Reason, "rest: " + proposal.Reason);
                 if (settings.debugLogging) Verse.Log.Message(AINarratorMod.LogPrefix + "rest: " + proposal.Reason);
                 return;
             }
@@ -604,7 +621,8 @@ namespace Stellaris.AI
                     // 编剧还在写上一段：只排队一个，新的覆盖旧的。
                     // 这里不阻塞导演——导演下一轮照样可以决策，只是概念先挂在队列里。
                     _queuedJob = job;
-                    LastStatus = "编剧正忙，已排队概念：" + proposal.Title;
+                    LastStatus = Loc.Pick("编剧正忙，已排队概念：" + proposal.Title,
+                        "writer is busy; concept queued: " + proposal.Title);
                     return;
                 }
 
@@ -617,14 +635,15 @@ namespace Stellaris.AI
             {
                 state.failStreak++;
                 state.lastFailTick = now;
-                LastStatus = "拒绝：候选表里没有 " + proposal.DefName;
+                LastStatus = Loc.Pick("拒绝：候选表里没有 " + proposal.DefName,
+                    "refused: the candidate table has no " + proposal.DefName);
                 Verse.Log.Warning(AINarratorMod.LogPrefix + "rejected hallucinated defName: " + proposal.DefName);
                 return;
             }
 
             if (!BudgetPolicy.CanUse(candidate, state, now, settings, out string denyReason))
             {
-                LastStatus = "拒绝：" + denyReason;
+                LastStatus = Loc.Pick("拒绝：" + denyReason, "refused: " + denyReason);
                 if (settings.debugLogging)
                 {
                     Verse.Log.Message(AINarratorMod.LogPrefix + "budget denied " + candidate.DefName + ": " + denyReason);
@@ -647,7 +666,8 @@ namespace Stellaris.AI
                 mapId = map.uniqueID
             });
 
-            LastStatus = "已批准：" + candidate.DefName + "（" + delay + " tick 后发射）";
+            LastStatus = Loc.Pick("已批准：" + candidate.DefName + "（" + delay + " tick 后发射）",
+                "approved: " + candidate.DefName + " (fires in " + delay + " ticks)");
             if (settings.debugLogging)
             {
                 Verse.Log.Message(AINarratorMod.LogPrefix + "approved " + candidate.DefName
@@ -663,7 +683,10 @@ namespace Stellaris.AI
             // finish_reason=length 表示输出被上限截断：内容是"成功"返回的半截脚本，
             // 光看解析/编译错误会以为是模型写错了格式。这个信息要写进日志，也要回喂给模型。
             bool truncated = string.Equals(finishReason, "length", StringComparison.OrdinalIgnoreCase);
-            string truncationNote = truncated ? "（这次输出被 token 上限截断，脚本没写完）" : "";
+            string truncationNote = truncated
+                ? Loc.Pick("（这次输出被 token 上限截断，脚本没写完）",
+                    " (this output was cut off by the token limit, so the script is incomplete)")
+                : "";
 
             if (settings.debugLogging && finishReason.Length > 0)
             {
@@ -678,28 +701,33 @@ namespace Stellaris.AI
                     !_writerLookup.CanLookup(settings))
                 {
                     RejectScript(state, settings,
-                        "查询轮不可用或已用尽" + (lookupError != null ? "：" + lookupError : ""), null);
+                        Loc.Pick("查询轮不可用或已用尽" + (lookupError != null ? "：" + lookupError : ""),
+                            "lookup rounds are unavailable or exhausted" + (lookupError != null ? ": " + lookupError : "")),
+                        null);
                     return;
                 }
 
                 if (lookupError != null || lookup == null)
                 {
                     RejectScript(state, settings,
-                        "LOOKUP 格式错误：" + (lookupError ?? "缺少查询参数"), null);
+                        Loc.Pick("LOOKUP 格式错误：" + (lookupError ?? "缺少查询参数"),
+                            "malformed LOOKUP: " + (lookupError ?? "missing query arguments")), null);
                     return;
                 }
 
                 int lookupNow = Find.TickManager.TicksGame;
                 if (!CanCallApi(state, settings))
                 {
-                    LastStatus = "拒绝：今日 API 调用已达上限，无法再查询";
+                    LastStatus = Loc.Pick("拒绝：今日 API 调用已达上限，无法再查询",
+                        "refused: daily API call limit reached, cannot look up again");
                     return;
                 }
 
                 lookup.Limit = Math.Min(lookup.Limit, settings.lookupMaxResults);
                 DefLookupResult result = DefQueryService.Search(lookup, _writerJob.Map, state, settings, lookupNow);
                 _writerLookup.Add(lookup, result);
-                LastStatus = "编剧查询：" + _writerLookup.Status;
+                LastStatus = Loc.Pick("编剧查询：" + _writerLookup.Status,
+                    "writer lookup: " + _writerLookup.Status);
                 if (settings.debugLogging)
                 {
                     Verse.Log.Message(AINarratorMod.LogPrefix + "writer lookup " + _writerLookup.LastQuery
@@ -750,7 +778,7 @@ namespace Stellaris.AI
                     state.luaEventsToday++;
                     state.failStreak++;
                     state.lastFailTick = Find.TickManager.TicksGame;
-                    LastStatus = "剧情执行失败：" + startError;
+                    LastStatus = Loc.Pick("剧情执行失败：" + startError, "story event failed: " + startError);
                     Verse.Log.Warning(AINarratorMod.LogPrefix + "lua event failed after applying actions: " + startError);
                 }
                 else
@@ -765,7 +793,8 @@ namespace Stellaris.AI
             _writerRetries = 0;
             _lastWriterScript = null;
             _lastWriterError = null;
-            LastStatus = "剧情已开启：" + title + "（" + definition.id + "）";
+            LastStatus = Loc.Pick("剧情已开启：" + title + "（" + definition.id + "）",
+                "story event started: " + title + " (" + definition.id + ")");
 
             if (settings.debugLogging)
             {
@@ -813,7 +842,8 @@ namespace Stellaris.AI
 
             // 轮数 = 首写 + 实际发出的重写；被拒次数为 0 时也要说清楚是"没重写"。
             int rounds = 1 + _writerRetries;
-            LastStatus = "脚本最终被拒（共 " + rounds + " 轮）：" + reason;
+            LastStatus = Loc.Pick("脚本最终被拒（共 " + rounds + " 轮）：" + reason,
+                "script rejected for good after " + rounds + " round(s): " + reason);
             Verse.Log.Warning(AINarratorMod.LogPrefix + "script rejected permanently after "
                                + rounds + " round(s), retries allowed=" + maxRetries + ": " + details);
         }

@@ -25,7 +25,7 @@ namespace Stellaris.AI
         public Dialog_NarrativeChoice(string title, string text,
             List<KeyValuePair<string, string>> options, Action<string> onChoose)
         {
-            _title = string.IsNullOrEmpty(title) ? "抉择" : title;
+            _title = string.IsNullOrEmpty(title) ? Loc.T("AI_Choice_Title") : title;
             _text = text ?? "";
             _options = options ?? new List<KeyValuePair<string, string>>();
             _onChoose = onChoose;

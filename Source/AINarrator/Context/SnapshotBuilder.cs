@@ -109,9 +109,9 @@ namespace Stellaris.AI
         private static string MoodBucket(float mood)
         {
             if (mood < 0f) return "?";
-            if (mood < 0.3f) return "低";
-            if (mood < 0.6f) return "中";
-            return "高";
+            if (mood < 0.3f) return Loc.Pick("低", "low");
+            if (mood < 0.6f) return Loc.Pick("中", "mid");
+            return Loc.Pick("高", "high");
         }
 
         private static string TopSkill(Pawn pawn)
@@ -143,46 +143,52 @@ namespace Stellaris.AI
         /// <summary>把快照渲染成 prompt 里那一段紧凑文本。</summary>
         public static string ToPromptText(Snapshot s)
         {
-            if (s == null) return "(无快照)";
+            if (s == null) return Loc.Pick("(无快照)", "(no snapshot)");
 
             var sb = new StringBuilder(1024);
-            sb.Append("第 ").Append(s.Day).Append(" 天")
-              .Append(" | 生物群系 ").Append(s.Biome)
-              .Append(" | 天气 ").Append(s.Weather)
-              .Append(" | 室外 ").Append(s.OutdoorTemp.ToString("F0")).Append("°C\n");
+            sb.Append(Loc.Pick("第 " + s.Day + " 天", "Day " + s.Day))
+              .Append(Loc.Pick(" | 生物群系 ", " | biome ")).Append(s.Biome)
+              .Append(Loc.Pick(" | 天气 ", " | weather ")).Append(s.Weather)
+              .Append(Loc.Pick(" | 室外 ", " | outdoor "))
+              .Append(s.OutdoorTemp.ToString("F0")).Append("°C\n");
 
-            sb.Append("殖民者 ").Append(s.Colonists)
-              .Append(" 人（倒地 ").Append(s.Downed)
-              .Append("，精神崩溃 ").Append(s.MentalBreak).Append("）")
-              .Append(" | 平均心情 ").Append(s.AvgMood < 0 ? "?" : (s.AvgMood * 100f).ToString("F0") + "%")
-              .Append(" | 财富 ").Append(s.Wealth.ToString("F0"))
-              .Append(" | 威胁点数 ").Append(s.ThreatPoints.ToString("F0"))
-              .Append(" | 食物 ").Append(s.FoodNutrition.ToString("F0")).Append(" 营养\n");
+            sb.Append(Loc.Pick("殖民者 ", "Colonists ")).Append(s.Colonists)
+              .Append(Loc.Pick(" 人（倒地 ", " (downed ")).Append(s.Downed)
+              .Append(Loc.Pick("，精神崩溃 ", ", mental breaks ")).Append(s.MentalBreak)
+              .Append(Loc.Pick("）", ")"))
+              .Append(Loc.Pick(" | 平均心情 ", " | avg mood "))
+              .Append(s.AvgMood < 0 ? "?" : (s.AvgMood * 100f).ToString("F0") + "%")
+              .Append(Loc.Pick(" | 财富 ", " | wealth ")).Append(s.Wealth.ToString("F0"))
+              .Append(Loc.Pick(" | 威胁点数 ", " | threat points ")).Append(s.ThreatPoints.ToString("F0"))
+              .Append(Loc.Pick(" | 食物 ", " | food ")).Append(s.FoodNutrition.ToString("F0"))
+              .Append(Loc.Pick(" 营养\n", " nutrition\n"));
 
 
             if (s.Pawns.Count > 0)
             {
-                sb.Append("主要殖民者：\n");
+                sb.Append(Loc.Pick("主要殖民者：\n", "Key colonists:\n"));
                 foreach (PawnBrief p in s.Pawns)
                 {
                     sb.Append("- ").Append(p.Name)
                       .Append(" | ").Append(p.Kind)
-                      .Append(" | ").Append(p.Age).Append("岁")
-                      .Append(" | 心情").Append(p.Mood)
-                      .Append(p.Downed ? " | 倒地" : "")
-                      .Append(string.IsNullOrEmpty(p.TopSkill) ? "" : " | 擅长" + p.TopSkill)
+                      .Append(" | ").Append(p.Age).Append(Loc.Pick("岁", " y"))
+                      .Append(Loc.Pick(" | 心情", " | mood ")).Append(p.Mood)
+                      .Append(p.Downed ? Loc.Pick(" | 倒地", " | downed") : "")
+                      .Append(string.IsNullOrEmpty(p.TopSkill)
+                          ? ""
+                          : Loc.Pick(" | 擅长", " | best at ") + p.TopSkill)
                       .Append('\n');
                 }
             }
 
             if (!string.IsNullOrEmpty(s.LastEvent))
             {
-                sb.Append("最近一次事件：").Append(s.LastEvent).Append('\n');
+                sb.Append(Loc.Pick("最近一次事件：", "Last incident: ")).Append(s.LastEvent).Append('\n');
             }
 
             if (!string.IsNullOrEmpty(s.RecentSummary))
             {
-                sb.Append("最近事件史：\n").Append(s.RecentSummary);
+                sb.Append(Loc.Pick("最近事件史：\n", "Recent events:\n")).Append(s.RecentSummary);
             }
 
             return sb.ToString();

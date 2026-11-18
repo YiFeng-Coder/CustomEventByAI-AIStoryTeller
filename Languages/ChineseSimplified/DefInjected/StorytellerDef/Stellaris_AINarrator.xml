@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 叙述者 Def 的中文名与简介。默认（英文）文本在 Defs/StorytellerDefs/Stellaris_AINarrator.xml 里。 -->
+  <Stellaris_AINarrator.label>AI 叙述者</Stellaris_AINarrator.label>
+  <Stellaris_AINarrator.description>由大语言模型担任叙事导演。它会读取殖民地状况，自主决定何时发事件、何时休整，并能现场编写多阶段剧情。</Stellaris_AINarrator.description>
+
+</LanguageData>

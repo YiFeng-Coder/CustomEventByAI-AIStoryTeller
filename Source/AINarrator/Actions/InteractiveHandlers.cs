@@ -16,18 +16,19 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.objective{text=字符串≤120, days=0~10} —— 记一条叙事目标（days>0 时到期提醒；每天提醒一次）";
+            Loc.Pick("story.objective{text=字符串≤120, days=0~10} —— 记一条叙事目标（days>0 时到期提醒；每天提醒一次）",
+                     "story.objective{text=string ≤120, days=0~10} — records a narrative objective (reminds on expiry when days>0; reminds once per day)");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
 
             string text = a.ArgString("text");
-            if (text.Length == 0) { error = "text 不能为空"; return false; }
-            if (text.Length > 120) { error = "text 超过 120 字"; return false; }
+            if (text.Length == 0) { error = Loc.Pick("text 不能为空", "text must not be empty"); return false; }
+            if (text.Length > 120) { error = Loc.Pick("text 超过 120 字", "text exceeds 120 characters"); return false; }
 
             int days = a.ArgInt("days", 0);
-            if (days < 0 || days > 10) { error = "days 必须在 0..10"; return false; }
+            if (days < 0 || days > 10) { error = Loc.Pick("days 必须在 0..10", "days must be within 0..10"); return false; }
 
             return true;
         }
@@ -35,7 +36,7 @@ namespace Stellaris.AI
         public bool TryExecute(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
-            if (ctx.State == null) { error = "缺少叙述者状态"; return false; }
+            if (ctx.State == null) { error = Loc.Pick("缺少叙述者状态", "missing narrator state"); return false; }
 
             int days = Math.Max(0, Math.Min(10, a.ArgInt("days", 0)));
             var record = new ObjectiveRecord
@@ -51,7 +52,7 @@ namespace Stellaris.AI
 
             string title = ctx.Definition != null && !string.IsNullOrEmpty(ctx.Definition.title)
                 ? ctx.Definition.title
-                : "新的目标";
+                : Loc.Pick("新的目标", "New Objective");
 
             Find.LetterStack.ReceiveLetter(title, record.text, LetterDefOf.NeutralEvent);
 
@@ -91,7 +92,7 @@ namespace Stellaris.AI
                 if (record.dueTick > 0 && now >= record.dueTick)
                 {
                     record.done = true;
-                    Messages.Message("目标到期：" + record.text, MessageTypeDefOf.NeutralEvent, false);
+                    Messages.Message(Loc.Pick("目标到期：" + record.text, "Objective expired: " + record.text), MessageTypeDefOf.NeutralEvent, false);
                     continue;
                 }
 
@@ -99,9 +100,10 @@ namespace Stellaris.AI
                 record.lastReminderTick = now;
 
                 string suffix = record.dueTick > 0
-                    ? "（还剩 " + Math.Max(1, (record.dueTick - now) / 60000) + " 天）"
+                    ? Loc.Pick("（还剩 " + Math.Max(1, (record.dueTick - now) / 60000) + " 天）",
+                               " (" + Math.Max(1, (record.dueTick - now) / 60000) + " days left)")
                     : "";
-                Messages.Message("叙事目标：" + record.text + suffix, MessageTypeDefOf.NeutralEvent, false);
+                Messages.Message(Loc.Pick("叙事目标：" + record.text + suffix, "Narrative objective: " + record.text + suffix), MessageTypeDefOf.NeutralEvent, false);
             }
         }
 
@@ -128,7 +130,8 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.focus{spot=锚点} —— 把镜头跳到该位置（纯粹的演出，没有副作用）";
+            Loc.Pick("story.focus{spot=锚点} —— 把镜头跳到该位置（纯粹的演出，没有副作用）",
+                     "story.focus{spot=anchor} — jumps the camera to that position (pure presentation, no side effects)");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -156,36 +159,38 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.choice_letter{title=≤60, prompt=≤600, options={id,label}2~4 个} —— 选项放在信件栏里，不弹窗；" +
-            "选后回调 trigger=\"choice_selected\"，选中项在 ctx.payload.choice";
+            Loc.Pick("story.choice_letter{title=≤60, prompt=≤600, options={id,label}2~4 个} —— 选项放在信件栏里，不弹窗；" +
+                     "选后回调 trigger=\"choice_selected\"，选中项在 ctx.payload.choice",
+                     "story.choice_letter{title=≤60, prompt=≤600, options={id,label} 2~4 entries} — options live in the letter stack instead of a popup; " +
+                     "after a choice, the callback fires with trigger=\"choice_selected\" and the chosen option is in ctx.payload.choice");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
 
             string title = a.ArgString("title");
-            if (title.Length > 60) { error = "title 超过 60 字"; return false; }
+            if (title.Length > 60) { error = Loc.Pick("title 超过 60 字", "title exceeds 60 characters"); return false; }
 
             string prompt = a.ArgString("prompt");
-            if (prompt.Length > 600) { error = "prompt 超过 600 字"; return false; }
+            if (prompt.Length > 600) { error = Loc.Pick("prompt 超过 600 字", "prompt exceeds 600 characters"); return false; }
 
             List<object> options = a.ArgList("options");
-            if (options == null || options.Count < 2) { error = "至少需要 2 个选项"; return false; }
-            if (options.Count > 4) { error = "最多 4 个选项"; return false; }
+            if (options == null || options.Count < 2) { error = Loc.Pick("至少需要 2 个选项", "at least 2 options are required"); return false; }
+            if (options.Count > 4) { error = Loc.Pick("最多 4 个选项", "at most 4 options are allowed"); return false; }
 
             foreach (object item in options)
             {
                 Dictionary<string, object> dict = PlannedAction.AsDict(item);
-                if (dict == null) { error = "options 的每一项必须是 table"; return false; }
+                if (dict == null) { error = Loc.Pick("options 的每一项必须是 table", "each entry in options must be a table"); return false; }
 
                 dict.TryGetValue("id", out object idObj);
                 dict.TryGetValue("label", out object labelObj);
                 string id = idObj as string;
                 string label = labelObj as string;
 
-                if (string.IsNullOrEmpty(id)) { error = "选项缺少 id"; return false; }
-                if (string.IsNullOrEmpty(label)) { error = "选项缺少 label"; return false; }
-                if (label.Length > 40) { error = "选项文字超过 40 字"; return false; }
+                if (string.IsNullOrEmpty(id)) { error = Loc.Pick("选项缺少 id", "option is missing id"); return false; }
+                if (string.IsNullOrEmpty(label)) { error = Loc.Pick("选项缺少 label", "option is missing label"); return false; }
+                if (label.Length > 40) { error = Loc.Pick("选项文字超过 40 字", "option label exceeds 40 characters"); return false; }
             }
 
             return true;
@@ -200,8 +205,8 @@ namespace Stellaris.AI
                 def = LetterDefOf.NeutralEvent,
                 Label = ctx.Definition != null && !string.IsNullOrEmpty(ctx.Definition.title)
                     ? ctx.Definition.title
-                    : a.ArgString("title", "抉择"),
-                Text = a.ArgString("prompt", "需要你做一个决定。"),
+                    : a.ArgString("title", Loc.Pick("抉择", "Choice")),
+                Text = a.ArgString("prompt", Loc.Pick("需要你做一个决定。", "You need to make a decision.")),
                 lookTargets = LookTargets.Invalid,
                 instanceId = instanceId
             };
@@ -277,7 +282,7 @@ namespace Stellaris.AI
         }
 
         protected override string GetMouseoverText() =>
-            string.IsNullOrEmpty(Label) ? "这是一次抉择" : Label;
+            string.IsNullOrEmpty(Label) ? Loc.Pick("这是一次抉择", "This is a choice") : Label;
 
         /// <summary>点开信件：用我们自己的弹窗列出选项（不依赖原版 ChoiceLetter 的选项面板）。</summary>
         public override void OpenLetter()
@@ -291,7 +296,7 @@ namespace Stellaris.AI
             if (options.Count == 0)
             {
                 // 理论上不会发生（Validate 要求 2~4 个选项），兜底成一条"知道了"。
-                options.Add(new KeyValuePair<string, string>("ok", "知道了"));
+                options.Add(new KeyValuePair<string, string>("ok", Loc.Pick("知道了", "Understood")));
             }
 
             NarrativeChoiceLetter letter = this;

@@ -14,6 +14,13 @@
 - 0.6.0 起动作库扩展到 **42 个**：除叙事与地图外，还能改变角色想法与关系、留下可见现场（废墟 / 血迹 / 兽群），并给出叙事目标。
 - 模型供应商（DeepSeek、OpenAI、Kimi、智谱 GLM、通义千问、SiliconFlow、OpenRouter、Ollama 等）、模型与调用预算均在游戏内设置页配置，API Key 保存在本地存档配置中，不随仓库分发。
 
+## 本地化
+
+- **英文是默认文本**：Def、界面、信件与提示词的英文直接写在源码/Def 里，英文玩家开箱即用；
+- **简体中文**在 `Languages/ChineseSimplified/`，游戏语言为中文时自动覆盖；
+- **叙述语言跟随游戏语言**：中文游戏里模型写中文剧情，其它语言写英文，不需要单独开关；
+- 新增语言只要加一个 `Languages/<语言>/Keyed/` 目录，约定见 [本地化](Docs/本地化.md)。
+
 ## 安装
 
 1. 将本目录整个放入 `RimWorld/Mods/AIIncidents`。
@@ -27,7 +34,9 @@
 | 路径 | 说明 |
 | --- | --- |
 | `About/` | 模组元数据（`About.xml`） |
-| `Defs/` | 叙述者 Def（`Stellaris_AINarrator.xml`） |
+| `Defs/` | 叙述者 Def（`Stellaris_AINarrator.xml`，默认英文） |
+| `Languages/` | 语言文件（`English/`、`ChineseSimplified/`） |
+| `tools/check_loc.py`、`tools/check_cjk.py` | 本地化自检脚本 |
 | `1.7/Assemblies/` | 编译输出 `AINarrator.dll` |
 | `Source/AINarrator/` | C# 源码（net10.0，命名空间 `Stellaris.AI`） |
 | `tools/` | 构建与文档工具 |
@@ -57,6 +66,7 @@ powershell -ExecutionPolicy Bypass -File tools/build.ps1 -CheckOnly
 - [P5-Def检索交付说明](Docs/P5-Def检索交付说明.md)
 - [编剧提示词](Docs/编剧提示词.md)
 - [动作库参考](Docs/动作库参考.md)
+- [本地化](Docs/本地化.md)
 
 ## 许可
 

@@ -22,5 +22,5 @@
     <li>brrainz.harmony</li>
     <li>Feng.RimLua</li>
   </loadAfter>
-  <description>AI 叙述者：由外部大语言模型担任叙事导演，自主决定何时发事件，并可用 Lua 现场编写多阶段剧情（信件、选项、分支、定时器）。0.6.0 起动作库扩展到 42 个：除叙事与地图外，还能改变角色的想法与关系、留下可见的现场（废墟/血迹/兽群），并给出叙事目标。模型供应商、模型与调用预算由玩家自行配置。</description>
+  <description>AI Narrator: an external large language model acts as your colony's narrative director. It decides on its own when to fire incidents, and can write multi-stage storylines in Lua on the spot (letters, choices, branches, timers). Since 0.6.0 the action library has grown to 42 actions: beyond narrative and map effects, the AI can change a pawn's thoughts and relationships, leave visible traces on the map (ruins, blood, animal herds), and set narrative objectives. The provider, model and call budget are all up to the player.</description>
 </ModMetaData>

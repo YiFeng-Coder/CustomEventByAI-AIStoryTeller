@@ -34,7 +34,8 @@ namespace Stellaris.AI
             string payload = first.Substring(colon + 1).Trim();
             if (payload.Length == 0)
             {
-                error = "LOOKUP: 后面缺少 JSON，例如 LOOKUP: {\"kind\":\"item\",\"q\":\"药\"}";
+                error = Loc.Pick("LOOKUP: 后面缺少 JSON，例如 LOOKUP: {\"kind\":\"item\",\"q\":\"药\"}",
+                    "LOOKUP: is missing its JSON, for example LOOKUP: {\"kind\":\"item\",\"q\":\"medicine\"}");
                 return true;
             }
 
@@ -49,7 +50,10 @@ namespace Stellaris.AI
                 request = DefLookupRequest.FromJson(doc.RootElement, out error);
                 if (request == null)
                 {
-                    if (string.IsNullOrEmpty(error)) error = "LOOKUP 的 JSON 不合法";
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        error = Loc.Pick("LOOKUP 的 JSON 不合法", "The LOOKUP JSON is not valid");
+                    }
                     return true;
                 }
 
@@ -58,16 +62,28 @@ namespace Stellaris.AI
             }
             catch (JsonException e)
             {
-                error = "LOOKUP 的 JSON 解析失败：" + e.Message;
+                error = Loc.Pick("LOOKUP 的 JSON 解析失败：" + e.Message,
+                    "Failed to parse the LOOKUP JSON: " + e.Message);
                 return true;
             }
         }
 
         public static string FormatBlock(int index, DefLookupResult result)
         {
-            if (result == null) return "【查询结果 #" + index + "】错误：查询没有返回结果";
-            if (!result.Ok) return "【查询结果 #" + index + "】错误：" + result.Error;
-            return "【查询结果 #" + index + "】" + result.Text;
+            if (result == null)
+            {
+                return Loc.Pick("【查询结果 #" + index + "】错误：查询没有返回结果",
+                    "[Lookup result #" + index + "] error: the query returned nothing");
+            }
+
+            if (!result.Ok)
+            {
+                return Loc.Pick("【查询结果 #" + index + "】错误：" + result.Error,
+                    "[Lookup result #" + index + "] error: " + result.Error);
+            }
+
+            return Loc.Pick("【查询结果 #" + index + "】" + result.Text,
+                "[Lookup result #" + index + "] " + result.Text);
         }
 
         private static string FirstNonEmptyLine(string text)

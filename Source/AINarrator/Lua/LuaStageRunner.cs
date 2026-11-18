@@ -39,19 +39,21 @@ namespace Stellaris.AI
 
             if (string.IsNullOrWhiteSpace(source))
             {
-                outcome.Error = "脚本为空";
+                outcome.Error = Loc.Pick("脚本为空", "script is empty");
                 return outcome;
             }
 
             if (System.Text.Encoding.UTF8.GetByteCount(source) > MaxSourceBytes)
             {
-                outcome.Error = "脚本超过 " + (MaxSourceBytes / 1024) + "KB 上限";
+                outcome.Error = Loc.Pick("脚本超过 " + (MaxSourceBytes / 1024) + "KB 上限",
+                    "script exceeds the " + (MaxSourceBytes / 1024) + "KB limit");
                 return outcome;
             }
 
             if (!LuaRuntime.Initialized)
             {
-                outcome.Error = "RimLua 运行时尚未初始化（是不是没装/没启用 RimLua？）";
+                outcome.Error = Loc.Pick("RimLua 运行时尚未初始化（是不是没装/没启用 RimLua？）",
+                    "the RimLua runtime is not initialized (is RimLua missing or disabled?)");
                 return outcome;
             }
 
@@ -70,7 +72,8 @@ namespace Stellaris.AI
             }
             catch (Exception e)
             {
-                outcome.Error = "编译异常：" + e.GetType().Name + ": " + e.Message;
+                outcome.Error = Loc.Pick("编译异常：" + e.GetType().Name + ": " + e.Message,
+                    "compile threw: " + e.GetType().Name + ": " + e.Message);
                 return outcome;
             }
 
@@ -84,13 +87,13 @@ namespace Stellaris.AI
 
             if (result == null)
             {
-                outcome.Error = "RimLua 返回了 null";
+                outcome.Error = Loc.Pick("RimLua 返回了 null", "RimLua returned null");
                 return outcome;
             }
 
             if (!result.Ok)
             {
-                outcome.Error = result.Error ?? "脚本执行失败";
+                outcome.Error = result.Error ?? Loc.Pick("脚本执行失败", "script execution failed");
                 return outcome;
             }
 
@@ -113,19 +116,20 @@ namespace Stellaris.AI
 
             if (string.IsNullOrWhiteSpace(source))
             {
-                error = "脚本为空";
+                error = Loc.Pick("脚本为空", "script is empty");
                 return false;
             }
 
             if (System.Text.Encoding.UTF8.GetByteCount(source) > MaxSourceBytes)
             {
-                error = "脚本超过 " + (MaxSourceBytes / 1024) + "KB 上限";
+                error = Loc.Pick("脚本超过 " + (MaxSourceBytes / 1024) + "KB 上限",
+                    "script exceeds the " + (MaxSourceBytes / 1024) + "KB limit");
                 return false;
             }
 
             if (!LuaRuntime.Initialized)
             {
-                error = "RimLua 未初始化";
+                error = Loc.Pick("RimLua 未初始化", "RimLua is not initialized");
                 return false;
             }
 
@@ -141,7 +145,8 @@ namespace Stellaris.AI
                 DynValue fn = script.Globals.Get("run");
                 if (fn == null || fn.Type != DataType.Function)
                 {
-                    error = "脚本里没有定义全局函数 run(ctx, state)";
+                    error = Loc.Pick("脚本里没有定义全局函数 run(ctx, state)",
+                        "the script does not define the global function run(ctx, state)");
                     return false;
                 }
 
@@ -175,7 +180,8 @@ namespace Stellaris.AI
 
             if (compile == null || !compile.IsSuccess)
             {
-                error = "编译失败：" + (compile == null ? "null" : compile.Error);
+                error = Loc.Pick("编译失败：" + (compile == null ? "null" : compile.Error),
+                    "compile failed: " + (compile == null ? "null" : compile.Error));
                 return null;
             }
 
@@ -187,7 +193,8 @@ namespace Stellaris.AI
         {
             if (!RimLuaThread.IsMainThread)
             {
-                throw new InvalidOperationException("Lua 阶段脚本必须在主线程执行");
+                throw new InvalidOperationException(Loc.Pick("Lua 阶段脚本必须在主线程执行",
+                    "Lua stage scripts must run on the main thread"));
             }
         }
     }

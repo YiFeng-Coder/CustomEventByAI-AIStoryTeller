@@ -83,7 +83,8 @@ namespace Stellaris.AI
 
             if (!TrySplit(raw, out string kindId, out string query, out string parseError))
             {
-                error = "参数 " + key + " 的占位符 " + raw + " 格式不对：" + parseError;
+                error = Loc.Pick("参数 " + key + " 的占位符 " + raw + " 格式不对：" + parseError,
+                    "Parameter " + key + ": placeholder " + raw + " is malformed: " + parseError);
                 return false;
             }
 
@@ -92,15 +93,37 @@ namespace Stellaris.AI
 
             if (!resolution.Ok)
             {
-                error = "参数 " + key + " 的占位符 " + raw + " 无法解析：" + resolution.Error;
+                error = Loc.Pick("参数 " + key + " 的占位符 " + raw + " 无法解析：" + resolution.Error,
+                    "Parameter " + key + ": placeholder " + raw + " could not be resolved: "
+                    + resolution.Error);
+                return false;
+            }
+
+            // 灵感是"一锤子买卖"：8 种灵感的效果完全不同，泛化查询（@inspiration/灵感）
+            // 静默取第一名，结果就是玩家看到"我要创作灵感，怎么给了工作狂热"。
+            // 这种参数没有"差不多就行"的余地，命中多个就退回候选，让模型写具体 defName。
+            if (string.Equals(key, "inspirationDef", StringComparison.Ordinal) && resolution.Total > 1)
+            {
+                error = Loc.Pick(
+                    "参数 " + key + " 的占位符 " + raw + " 匹配到 " + resolution.Total
+                    + " 种灵感，效果完全不同，不能自动挑一个。请改写成具体的 DefName。\n"
+                    + resolution.Candidates,
+                    "Parameter " + key + ": placeholder " + raw + " matches " + resolution.Total
+                    + " inspirations, which all have different effects, so one cannot be picked "
+                    + "automatically. Rewrite it as an exact DefName.\n"
+                    + resolution.Candidates);
                 return false;
             }
 
             if (settings != null && settings.strictDefPlaceholders && resolution.Total > 1)
             {
-                error = "参数 " + key + " 的占位符 " + raw + " 匹配到 "
-                        + resolution.Total + " 个（strict 模式，未自动选择）。\n"
-                        + resolution.Candidates;
+                error = Loc.Pick(
+                    "参数 " + key + " 的占位符 " + raw + " 匹配到 "
+                    + resolution.Total + " 个（strict 模式，未自动选择）。\n"
+                    + resolution.Candidates,
+                    "Parameter " + key + ": placeholder " + raw + " matches "
+                    + resolution.Total + " entries (strict mode, nothing was picked automatically).\n"
+                    + resolution.Candidates);
                 return false;
             }
 
@@ -139,6 +162,14 @@ namespace Stellaris.AI
 
             if (family.Find(raw) != null) return true;
 
+            // 模型经常直接抄 Def 的标签（"创作灵感" / "inspired creativity"）。
+            // 标签唯一时当成 defName 用；有歧义就不猜，交给后面的 near-miss / 报错。
+            if (TryUniqueLabel(family, raw, out Def byLabel))
+            {
+                replacement = byLabel.defName;
+                return true;
+            }
+
             // 高影响类别（原版事件 / 派系 / 任务模板）不猜：猜错会触发一段完全无关的内容。
             // 它们交给 handler 的精确校验去报错。
             if (!family.FailEarly) return true;
@@ -150,12 +181,44 @@ namespace Stellaris.AI
                 return true;
             }
 
-            string op = string.IsNullOrEmpty(action.opId) ? "" : "（opId=\"" + action.opId + "\"）";
-            error = "第 " + (actionIndex + 1) + " 条动作" + op + " " + action.type + " 的参数 "
-                    + key + "=\"" + raw + "\" 不是有效的" + family.Label + "名字"
-                    + (matches > 0 ? "（有 " + matches + " 个相似项，但没有唯一匹配）" : "")
-                    + "。\n" + family.ExampleHint();
+            string op = string.IsNullOrEmpty(action.opId)
+                ? ""
+                : Loc.Pick("（opId=\"" + action.opId + "\"）", " (opId=\"" + action.opId + "\")");
+            error = Loc.Pick(
+                "第 " + (actionIndex + 1) + " 条动作" + op + " " + action.type + " 的参数 "
+                + key + "=\"" + raw + "\" 不是有效的" + family.Label + "名字"
+                + (matches > 0 ? "（有 " + matches + " 个相似项，但没有唯一匹配）" : "")
+                + "。\n" + family.ExampleHint(),
+                "Action " + (actionIndex + 1) + op + " " + action.type + ": parameter "
+                + key + "=\"" + raw + "\" is not a valid " + family.Label + " name"
+                + (matches > 0 ? " (" + matches + " similar entries, but no unique match)" : "")
+                + ".\n" + family.ExampleHint());
             return false;
+        }
+
+        /// <summary>标签完全相等且唯一时返回它；多义（例如同名不同 Def）不猜。</summary>
+        private static bool TryUniqueLabel(DefFamily family, string raw, out Def match)
+        {
+            match = null;
+            string norm = DefEntry.NormalizeText(raw);
+            if (norm.Length == 0) return false;
+
+            int found = 0;
+            foreach (Def def in family.All())
+            {
+                if (def == null || string.IsNullOrEmpty(def.label)) continue;
+                if (!string.Equals(DefEntry.NormalizeText(def.label), norm, StringComparison.Ordinal)) continue;
+
+                match = def;
+                found++;
+                if (found > 1)
+                {
+                    match = null;
+                    return false;
+                }
+            }
+
+            return found == 1;
         }
 
         private static bool IsDefArg(PlannedAction action, string key)
@@ -234,13 +297,19 @@ namespace Stellaris.AI
                 for (int i = 0; i < defs.Count && parts.Count < 6; i++)
                 {
                     Def def = defs[i];
-                    string label = string.IsNullOrEmpty(def.label) ? "" : "（" + def.label + "）";
+                    string label = string.IsNullOrEmpty(def.label)
+                        ? ""
+                        : Loc.Pick("（" + def.label + "）", " (" + def.label + ")");
                     parts.Add(def.defName + label);
                 }
 
-                return "可用的名字例如：" + string.Join("、", parts.ToArray())
-                       + "。\n也可以写 @" + KindId + "/关键词（例如 @" + KindId + "/" + SampleKeyword() + "），"
-                       + "让游戏按 defName / 标签 / 描述自动挑一个。";
+                return Loc.Pick(
+                    "可用的名字例如：" + string.Join("、", parts.ToArray())
+                    + "。\n也可以写 @" + KindId + "/关键词（例如 @" + KindId + "/" + SampleKeyword() + "），"
+                    + "让游戏按 defName / 标签 / 描述自动挑一个。",
+                    "Example valid names: " + string.Join(", ", parts.ToArray())
+                    + ".\nYou can also write @" + KindId + "/keyword (for example @" + KindId + "/"
+                    + SampleKeyword() + "), and the game will pick one by defName / label / description.");
             }
 
             private string SampleKeyword()
@@ -250,7 +319,7 @@ namespace Stellaris.AI
                     if (def != null && !string.IsNullOrEmpty(def.label)) return def.label;
                 }
 
-                return "关键词";
+                return Loc.Pick("关键词", "keyword");
             }
         }
 
@@ -279,27 +348,27 @@ namespace Stellaris.AI
         private static readonly Dictionary<string, DefFamily> ArgFamilies =
             new Dictionary<string, DefFamily>(StringComparer.Ordinal)
             {
-                { "thingDef", Family<ThingDef>("item", "物品/建筑/植物") },
-                { "stuff", Family<ThingDef>("item", "材质") },
-                { "plantDef", Family<ThingDef>("plant", "植物") },
-                { "filthDef", Family<ThingDef>("filth", "污渍") },
-                { "pawnKind", Family<PawnKindDef>("pawnKind", "角色/动物") },
-                { "hediffDef", Family<HediffDef>("hediff", "负面状态") },
-                { "skillDef", Family<SkillDef>("skill", "技能") },
-                { "weatherDef", Family<WeatherDef>("weather", "天气") },
-                { "conditionDef", Family<GameConditionDef>("condition", "地图状况") },
-                { "damageDef", Family<DamageDef>("damage", "伤害类型") },
-                { "researchDef", Family<ResearchProjectDef>("research", "研究") },
-                { "questScriptDef", Family<QuestScriptDef>("quest", "任务模板", false) },
-                { "factionDef", Family<FactionDef>("faction", "派系", false) },
-                { "thoughtDef", Family<ThoughtDef>("thought", "想法") },
-                { "traitDef", Family<TraitDef>("trait", "特质") },
-                { "relationDef", Family<PawnRelationDef>("relation", "关系") },
-                { "inspirationDef", Family<InspirationDef>("inspiration", "灵感") },
-                { "mentalStateDef", Family<MentalStateDef>("mentalState", "精神状态") },
-                { "terrainDef", Family<TerrainDef>("terrain", "地形") },
-                { "roofDef", Family<RoofDef>("roof", "屋顶") },
-                { "defName", Family<IncidentDef>("incident", "原版事件", false) }
+                { "thingDef", Family<ThingDef>("item", Loc.Pick("物品/建筑/植物", "item/building/plant def")) },
+                { "stuff", Family<ThingDef>("item", Loc.Pick("材质", "stuff def")) },
+                { "plantDef", Family<ThingDef>("plant", Loc.Pick("植物", "plant def")) },
+                { "filthDef", Family<ThingDef>("filth", Loc.Pick("污渍", "filth def")) },
+                { "pawnKind", Family<PawnKindDef>("pawnKind", Loc.Pick("角色/动物", "pawn kind/animal")) },
+                { "hediffDef", Family<HediffDef>("hediff", Loc.Pick("负面状态", "negative hediff")) },
+                { "skillDef", Family<SkillDef>("skill", Loc.Pick("技能", "skill")) },
+                { "weatherDef", Family<WeatherDef>("weather", Loc.Pick("天气", "weather")) },
+                { "conditionDef", Family<GameConditionDef>("condition", Loc.Pick("地图状况", "map condition")) },
+                { "damageDef", Family<DamageDef>("damage", Loc.Pick("伤害类型", "damage type")) },
+                { "researchDef", Family<ResearchProjectDef>("research", Loc.Pick("研究", "research project")) },
+                { "questScriptDef", Family<QuestScriptDef>("quest", Loc.Pick("任务模板", "quest template"), false) },
+                { "factionDef", Family<FactionDef>("faction", Loc.Pick("派系", "faction"), false) },
+                { "thoughtDef", Family<ThoughtDef>("thought", Loc.Pick("想法", "thought")) },
+                { "traitDef", Family<TraitDef>("trait", Loc.Pick("特质", "trait")) },
+                { "relationDef", Family<PawnRelationDef>("relation", Loc.Pick("关系", "relation")) },
+                { "inspirationDef", Family<InspirationDef>("inspiration", Loc.Pick("灵感", "inspiration")) },
+                { "mentalStateDef", Family<MentalStateDef>("mentalState", Loc.Pick("精神状态", "mental state")) },
+                { "terrainDef", Family<TerrainDef>("terrain", Loc.Pick("地形", "terrain")) },
+                { "roofDef", Family<RoofDef>("roof", Loc.Pick("屋顶", "roof")) },
+                { "defName", Family<IncidentDef>("incident", Loc.Pick("原版事件", "vanilla incident"), false) }
             };
 
         private static bool TrySplit(string raw, out string kindId, out string query, out string error)
@@ -311,7 +380,8 @@ namespace Stellaris.AI
             int slash = raw.IndexOf('/');
             if (slash <= 1 || slash >= raw.Length - 1)
             {
-                error = "应写成 @类别/关键词，例如 @item/药";
+                error = Loc.Pick("应写成 @类别/关键词，例如 @item/药",
+                    "Write @kind/keyword, for example @item/medicine");
                 return false;
             }
 
@@ -319,13 +389,14 @@ namespace Stellaris.AI
             query = raw.Substring(slash + 1).Trim();
             if (kindId.Length == 0 || query.Length == 0)
             {
-                error = "类别和关键词都不能为空";
+                error = Loc.Pick("类别和关键词都不能为空", "Neither the kind nor the keyword may be empty");
                 return false;
             }
 
             if (DefKindRegistry.Get(kindId) == null)
             {
-                error = "未知类别 " + kindId + "；可用类别：" + DefKindRegistry.ValidIds();
+                error = Loc.Pick("未知类别 " + kindId + "；可用类别：" + DefKindRegistry.ValidIds(),
+                    "Unknown kind " + kindId + "; available kinds: " + DefKindRegistry.ValidIds());
                 return false;
             }
 

@@ -103,7 +103,8 @@ namespace Stellaris.AI
             }
             catch (JsonException e)
             {
-                plan.ParseError = "脚本返回的不是合法 JSON：" + e.Message;
+                plan.ParseError = Loc.Pick("脚本返回的不是合法 JSON：" + e.Message,
+                    "script did not return valid JSON: " + e.Message);
                 return plan;
             }
 
@@ -112,7 +113,8 @@ namespace Stellaris.AI
                 JsonElement root = doc.RootElement;
                 if (root.ValueKind != JsonValueKind.Object)
                 {
-                    plan.ParseError = "脚本必须返回一个 table";
+                    plan.ParseError = Loc.Pick("脚本必须返回一个 table",
+                        "script must return a table");
                     return plan;
                 }
 

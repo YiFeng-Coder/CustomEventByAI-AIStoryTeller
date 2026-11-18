@@ -17,23 +17,34 @@ namespace Stellaris.AI
         {
             "心情", "情绪", "想法", "悲伤", "愤怒", "恐惧", "绝望", "希望", "愧疚", "孤独",
             "关系", "朋友", "亲人", "爱人", "兄弟", "姐妹", "父母", "孩子", "家", "背叛",
-            "特质", "性格", "崩溃", "疯", "灵感", "梦", "记忆", "记得", "思念", "哀悼"
+            "特质", "性格", "崩溃", "疯", "灵感", "梦", "记忆", "记得", "思念", "哀悼",
+            "mood", "emotion", "fear", "despair", "hope", "guilt", "lonely", "relationship",
+            "friend", "family", "lover", "brother", "sister", "parent", "child", "betray",
+            "trait", "personality", "breakdown", "inspiration", "dream", "memory", "remember",
+            "mourn", "grief", "anger"
         };
 
         private static readonly string[] SceneWords =
         {
             "废墟", "遗迹", "建筑", "房屋", "墙", "地形", "泥", "焦", "灰", "血迹", "痕迹",
-            "动物", "兽", "虫", "塌", "洞", "坑", "烧", "营地", "现场", "残骸", "雪", "荒"
+            "动物", "兽", "虫", "塌", "洞", "坑", "烧", "营地", "现场", "残骸", "雪", "荒",
+            "ruin", "relic", "building", "house", "wall", "terrain", "mud", "burnt", "ash",
+            "blood", "trace", "animal", "beast", "insect", "collapse", "cave", "pit", "fire",
+            "camp", "scene", "wreck", "debris", "snow", "wasteland", "desolate"
         };
 
         private static readonly string[] InteractiveWords =
         {
-            "目标", "期限", "倒计时", "守", "等", "抉择", "决定", "信件", "选择", "镜头", "演出"
+            "目标", "期限", "倒计时", "守", "等", "抉择", "决定", "信件", "选择", "镜头", "演出",
+            "objective", "deadline", "countdown", "guard", "wait", "choice", "decide",
+            "decision", "letter", "camera", "performance"
         };
 
         private static readonly string[] WorldWords =
         {
-            "派系", "外交", "研究", "任务", "好感", "联盟", "敌对", "声望", "科技", "条约", "商队"
+            "派系", "外交", "研究", "任务", "好感", "联盟", "敌对", "声望", "科技", "条约", "商队",
+            "faction", "diplomacy", "diplomatic", "research", "quest", "mission", "goodwill",
+            "alliance", "hostile", "reputation", "technology", "treaty", "caravan"
         };
 
         public static ActionCategoryMask Choose(string title, string concept, AINarratorSettings settings)
@@ -102,7 +113,9 @@ namespace Stellaris.AI
                 parts.Add(category.ToString());
             }
 
-            return string.Join(",", parts.ToArray()) + " (" + ActionRegistry.CountIn(mask) + " 个)";
+            return Loc.Pick(
+                string.Join(",", parts.ToArray()) + " (" + ActionRegistry.CountIn(mask) + " 个)",
+                string.Join(", ", parts.ToArray()) + " (" + ActionRegistry.CountIn(mask) + " actions)");
         }
     }
 }

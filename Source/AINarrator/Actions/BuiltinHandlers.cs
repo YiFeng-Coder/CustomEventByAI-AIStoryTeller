@@ -17,7 +17,8 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.send_letter{title=字符串≤80, text=字符串≤1200, letterDef=可选} —— 给玩家发一封信；title 与 text 不能都空";
+            Loc.Pick("story.send_letter{title=字符串≤80, text=字符串≤1200, letterDef=可选} —— 给玩家发一封信；title 与 text 不能都空",
+                     "story.send_letter{title=string ≤80, text=string ≤1200, letterDef=optional} — sends a letter to the player; title and text must not both be empty");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -27,19 +28,19 @@ namespace Stellaris.AI
 
             if (title.Length == 0 && text.Length == 0)
             {
-                error = "title 与 text 不能同时为空";
+                error = Loc.Pick("title 与 text 不能同时为空", "title and text must not both be empty");
                 return false;
             }
 
-            if (title.Length > 80) { error = "title 超过 80 字"; return false; }
-            if (text.Length > 1200) { error = "text 超过 1200 字"; return false; }
+            if (title.Length > 80) { error = Loc.Pick("title 超过 80 字", "title exceeds 80 characters"); return false; }
+            if (text.Length > 1200) { error = Loc.Pick("text 超过 1200 字", "text exceeds 1200 characters"); return false; }
             return true;
         }
 
         public bool TryExecute(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
-            string title = a.ArgString("title", "叙事");
+            string title = a.ArgString("title", Loc.Pick("叙事", "Narrative"));
             string text = a.ArgString("text");
 
             LetterDef def = DefDatabase<LetterDef>.GetNamedSilentFail(a.ArgString("letterDef"));
@@ -62,32 +63,34 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.show_choices{prompt=字符串≤600, options={{id,label}...}} —— 弹 2~4 个选项；" +
-            "玩家点选后，脚本会在 trigger=\"choice_selected\" 被再次调用，选中项在 ctx.payload.choice 里（等于该选项的 id）";
+            Loc.Pick("story.show_choices{prompt=字符串≤600, options={{id,label}...}} —— 弹 2~4 个选项；" +
+                     "玩家点选后，脚本会在 trigger=\"choice_selected\" 被再次调用，选中项在 ctx.payload.choice 里（等于该选项的 id）",
+                     "story.show_choices{prompt=string ≤600, options={{id,label}...}} — pops 2~4 options; " +
+                     "after the player picks one, the script is called again with trigger=\"choice_selected\", and the chosen option is in ctx.payload.choice (equal to that option's id)");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
             string prompt = a.ArgString("prompt");
-            if (prompt.Length > 600) { error = "prompt 超过 600 字"; return false; }
+            if (prompt.Length > 600) { error = Loc.Pick("prompt 超过 600 字", "prompt exceeds 600 characters"); return false; }
 
             List<object> options = a.ArgList("options");
-            if (options == null || options.Count < 2) { error = "至少需要 2 个选项"; return false; }
-            if (options.Count > 4) { error = "最多 4 个选项"; return false; }
+            if (options == null || options.Count < 2) { error = Loc.Pick("至少需要 2 个选项", "at least 2 options are required"); return false; }
+            if (options.Count > 4) { error = Loc.Pick("最多 4 个选项", "at most 4 options are allowed"); return false; }
 
             foreach (object item in options)
             {
                 Dictionary<string, object> dict = PlannedAction.AsDict(item);
-                if (dict == null) { error = "options 的每一项必须是 table"; return false; }
+                if (dict == null) { error = Loc.Pick("options 的每一项必须是 table", "each entry in options must be a table"); return false; }
 
                 dict.TryGetValue("id", out object idObj);
                 dict.TryGetValue("label", out object labelObj);
                 string id = idObj as string;
                 string label = labelObj as string;
 
-                if (string.IsNullOrEmpty(id)) { error = "选项缺少 id"; return false; }
-                if (string.IsNullOrEmpty(label)) { error = "选项缺少 label"; return false; }
-                if (label.Length > 40) { error = "选项文字超过 40 字"; return false; }
+                if (string.IsNullOrEmpty(id)) { error = Loc.Pick("选项缺少 id", "option is missing id"); return false; }
+                if (string.IsNullOrEmpty(label)) { error = Loc.Pick("选项缺少 label", "option is missing label"); return false; }
+                if (label.Length > 40) { error = Loc.Pick("选项文字超过 40 字", "option label exceeds 40 characters"); return false; }
             }
 
             return true;
@@ -113,7 +116,7 @@ namespace Stellaris.AI
             string instanceId = ctx.Instance != null ? ctx.Instance.id : "";
             string title = ctx.Definition != null && !string.IsNullOrEmpty(ctx.Definition.title)
                 ? ctx.Definition.title
-                : "抉择";
+                : Loc.Pick("抉择", "Choice");
 
             Find.WindowStack.Add(new Dialog_NarrativeChoice(title, prompt, options, choiceId =>
             {
@@ -141,21 +144,22 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.remember{text=字符串≤400} —— 往叙事历史里记一条，后续剧情会看到它（用来埋伏笔）";
+            Loc.Pick("story.remember{text=字符串≤400} —— 往叙事历史里记一条，后续剧情会看到它（用来埋伏笔）",
+                     "story.remember{text=string ≤400} — appends an entry to the narrative history; later story beats will see it (use it to plant foreshadowing)");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
             string text = a.ArgString("text");
-            if (text.Length == 0) { error = "text 不能为空"; return false; }
-            if (text.Length > 400) { error = "text 超过 400 字"; return false; }
+            if (text.Length == 0) { error = Loc.Pick("text 不能为空", "text must not be empty"); return false; }
+            if (text.Length > 400) { error = Loc.Pick("text 超过 400 字", "text exceeds 400 characters"); return false; }
             return true;
         }
 
         public bool TryExecute(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
-            if (ctx.State == null) { error = "缺少叙述者状态"; return false; }
+            if (ctx.State == null) { error = Loc.Pick("缺少叙述者状态", "missing narrator state"); return false; }
             ctx.State.PushHistory(new HistoryRecord
             {
                 tick = ctx.Now,
@@ -182,27 +186,30 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "incident.fire{defName=事件 DefName 或 @incident/关键词, points_multiplier=0.3~2.0} —— 立刻触发一个原版事件；" +
-            "defName 必须是真实存在且此刻 CanFireNow 为真的事件名（ThreatBig / ThreatSmall / Misc 是类别，不是事件名），否则整段作废";
+            Loc.Pick("incident.fire{defName=事件 DefName 或 @incident/关键词, points_multiplier=0.3~2.0} —— 立刻触发一个原版事件；" +
+                     "defName 必须是真实存在且此刻 CanFireNow 为真的事件名（ThreatBig / ThreatSmall / Misc 是类别，不是事件名），否则整段作废",
+                     "incident.fire{defName=incident DefName or @incident/keyword, points_multiplier=0.3~2.0} — fires a vanilla incident immediately; " +
+                     "defName must be an existing incident whose CanFireNow is true right now (ThreatBig / ThreatSmall / Misc are categories, not incident names), otherwise the whole batch is discarded");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
 
             string defName = a.ArgString("defName");
-            if (defName.Length == 0) { error = "缺少 defName"; return false; }
+            if (defName.Length == 0) { error = Loc.Pick("缺少 defName", "missing defName"); return false; }
 
             IncidentCandidate candidate = CandidateTable.Find(defName);
             if (candidate == null)
             {
-                error = CategoryHint(defName) ?? ("候选表里没有 " + defName + "（defName 必须是候选表里的事件名）");
+                error = CategoryHint(defName) ?? Loc.Pick("候选表里没有 " + defName + "（defName 必须是候选表里的事件名）",
+                                                          "no " + defName + " in the candidate table (defName must be an incident name from the candidate table)");
                 return false;
             }
 
             float multiplier = a.ArgFloat("points_multiplier", 1f);
             if (!(multiplier >= 0.3f && multiplier <= 2.0f))
             {
-                error = "points_multiplier 超出 [0.3, 2.0]";
+                error = Loc.Pick("points_multiplier 超出 [0.3, 2.0]", "points_multiplier is outside [0.3, 2.0]");
                 return false;
             }
 
@@ -226,21 +233,24 @@ namespace Stellaris.AI
             for (int i = 0; i < all.Count && taken < 3; i++)
             {
                 if (all[i].Category != defName) continue;
-                if (examples.Length > 0) examples.Append('、');
+                if (examples.Length > 0) examples.Append(Loc.IsChinese ? "、" : ", ");
                 examples.Append(all[i].DefName);
                 taken++;
             }
 
-            return defName + " 是事件类别，不是事件名。defName 要填候选表每行竖线左边那个名字"
-                   + (examples.Length > 0 ? "（" + defName + " 下的例子：" + examples + "）" : "");
+            string zh = defName + " 是事件类别，不是事件名。defName 要填候选表每行竖线左边那个名字"
+                        + (examples.Length > 0 ? "（" + defName + " 下的例子：" + examples + "）" : "");
+            string en = defName + " is an incident category, not an incident name. defName must be the name to the left of the pipe in each candidate-table row"
+                        + (examples.Length > 0 ? " (examples under " + defName + ": " + examples + ")" : "");
+            return Loc.Pick(zh, en);
         }
 
         public bool TryExecute(PlannedAction a, ActionContext ctx, out string error)
         {
             IncidentCandidate candidate = CandidateTable.Find(a.ArgString("defName"));
-            if (candidate == null) { error = "事件候选已不存在"; return false; }
+            if (candidate == null) { error = Loc.Pick("事件候选已不存在", "the incident candidate no longer exists"); return false; }
 
-            string reason = a.ArgString("reason", "由 Lua 剧情触发");
+            string reason = a.ArgString("reason", Loc.Pick("由 Lua 剧情触发", "triggered by a Lua story event"));
             if (!AiIncidentHistory.TryPrepare(candidate, ctx.State, ctx.Map, a.ArgFloat("points_multiplier", 1f),
                     ctx.Now, out IncidentParms parms, out error))
             {
@@ -283,19 +293,21 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "thing.spawn{thingDef=物品 DefName 或 @item/关键词, count=1~10, handle=可选句柄名} —— 在基地附近生成物品；" +
-            "thingDef 必须是真实存在的物品；之后要用 handle:名字 指向它时，必须在这里写 handle";
+            Loc.Pick("thing.spawn{thingDef=物品 DefName 或 @item/关键词, count=1~10, handle=可选句柄名} —— 在基地附近生成物品；" +
+                     "thingDef 必须是真实存在的物品；之后要用 handle:名字 指向它时，必须在这里写 handle",
+                     "thing.spawn{thingDef=item DefName or @item/keyword, count=1~10, handle=optional handle name} — spawns items near the base; " +
+                     "thingDef must be a real item; if you later want to refer to it with handle:name, you must set handle here");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
             string defName = a.ArgString("thingDef");
-            if (defName.Length == 0) { error = "缺少 thingDef"; return false; }
+            if (defName.Length == 0) { error = Loc.Pick("缺少 thingDef", "missing thingDef"); return false; }
 
             ThingDef thingDef = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
             if (thingDef == null)
             {
-                error = "不存在的 ThingDef：" + defName;
+                error = Loc.Pick("不存在的 ThingDef：" + defName, "unknown ThingDef: " + defName);
                 return false;
             }
 
@@ -303,8 +315,8 @@ namespace Stellaris.AI
             if (!SpawnSafety.CanMakeThing(thingDef, out error)) return false;
 
             int count = a.ArgInt("count", 1);
-            if (count < 1 || count > 10) { error = "count 必须在 1..10"; return false; }
-            if (ctx.Map == null) { error = "没有可用地图"; return false; }
+            if (count < 1 || count > 10) { error = Loc.Pick("count 必须在 1..10", "count must be within 1..10"); return false; }
+            if (ctx.Map == null) { error = Loc.Pick("没有可用地图", "no map available"); return false; }
             return ActionBudget.TryPlan(ctx, ActionBudget.Pool.Spawn, count, out error);
         }
 
@@ -312,7 +324,7 @@ namespace Stellaris.AI
         {
             error = null;
             ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(a.ArgString("thingDef"));
-            if (def == null || ctx.Map == null) { error = "没有可用地图或定义"; return false; }
+            if (def == null || ctx.Map == null) { error = Loc.Pick("没有可用地图或定义", "no map or def available"); return false; }
 
             int count = Math.Max(1, Math.Min(10, a.ArgInt("count", 1)));
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.Spawn, count, out error)) return false;
@@ -325,7 +337,7 @@ namespace Stellaris.AI
                 Thing thing = ThingMaker.MakeThing(def);
                 if (GenSpawn.Spawn(thing, cell, ctx.Map) == null || !thing.Spawned)
                 {
-                    error = "物品生成失败";
+                    error = Loc.Pick("物品生成失败", "failed to spawn the item");
                     return false;
                 }
 
@@ -347,18 +359,20 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "pawn.spawn{pawnKind=角色 DefName 或 @pawnKind/关键词, count=1~3, handle=可选句柄名} —— 在地图边缘生成角色（无派系，不会自动加入玩家）；" +
-            "pawnKind 必须是普通 PawnKindDef（不能是 CreepJoiner 等特殊子类）；之后要用 handle:名字 指向它时，必须在这里写 handle";
+            Loc.Pick("pawn.spawn{pawnKind=角色 DefName 或 @pawnKind/关键词, count=1~3, handle=可选句柄名} —— 在地图边缘生成角色（无派系，不会自动加入玩家）；" +
+                     "pawnKind 必须是普通 PawnKindDef（不能是 CreepJoiner 等特殊子类）；之后要用 handle:名字 指向它时，必须在这里写 handle",
+                     "pawn.spawn{pawnKind=pawn DefName or @pawnKind/keyword, count=1~3, handle=optional handle name} — spawns pawns at the map edge (no faction, they will not join the player); " +
+                     "pawnKind must be a plain PawnKindDef (not a special subclass such as CreepJoiner); if you later want to refer to it with handle:name, you must set handle here");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
             error = null;
             string kindName = a.ArgString("pawnKind");
-            if (kindName.Length == 0) { error = "缺少 pawnKind"; return false; }
+            if (kindName.Length == 0) { error = Loc.Pick("缺少 pawnKind", "missing pawnKind"); return false; }
             PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail(kindName);
             if (kind == null)
             {
-                error = "不存在的 PawnKindDef：" + kindName;
+                error = Loc.Pick("不存在的 PawnKindDef：" + kindName, "unknown PawnKindDef: " + kindName);
                 return false;
             }
 
@@ -369,8 +383,8 @@ namespace Stellaris.AI
             }
 
             int count = a.ArgInt("count", 1);
-            if (count < 1 || count > 3) { error = "count 必须在 1..3"; return false; }
-            if (ctx.Map == null) { error = "没有可用地图"; return false; }
+            if (count < 1 || count > 3) { error = Loc.Pick("count 必须在 1..3", "count must be within 1..3"); return false; }
+            if (ctx.Map == null) { error = Loc.Pick("没有可用地图", "no map available"); return false; }
             return ActionBudget.TryPlan(ctx, ActionBudget.Pool.Spawn, count, out error);
         }
 
@@ -378,7 +392,7 @@ namespace Stellaris.AI
         {
             error = null;
             PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail(a.ArgString("pawnKind"));
-            if (kind == null || ctx.Map == null) { error = "没有可用地图或定义"; return false; }
+            if (kind == null || ctx.Map == null) { error = Loc.Pick("没有可用地图或定义", "no map or def available"); return false; }
             if (!PawnKindSafety.IsPlainPawnKind(kind))
             {
                 error = PawnKindSafety.RejectSpecialPawnKind(a.ArgString("pawnKind"), kind);
@@ -398,7 +412,7 @@ namespace Stellaris.AI
                     PawnKindSafety.RepairGeneratedPawn(pawn);
                     if (pawn == null || GenSpawn.Spawn(pawn, cell, ctx.Map) == null || !pawn.Spawned)
                     {
-                        error = "角色生成失败";
+                        error = Loc.Pick("角色生成失败", "failed to spawn the pawn");
                         return false;
                     }
 
@@ -406,7 +420,7 @@ namespace Stellaris.AI
                 }
                 catch (Exception e)
                 {
-                    error = "角色生成失败：" + e.Message;
+                    error = Loc.Pick("角色生成失败：" + e.Message, "failed to spawn the pawn: " + e.Message);
                     return false;
                 }
             }

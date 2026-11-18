@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- ═══════════ Shared ═══════════ -->
+  <AI_Name>AI Narrator</AI_Name>
+  <AI_Common_Unlimited>Unlimited</AI_Common_Unlimited>
+  <AI_Common_NotSet>(not set)</AI_Common_NotSet>
+  <AI_Common_AtLeast>≥{0}</AI_Common_AtLeast>
+  <AI_Common_Range>{0}–{1}</AI_Common_Range>
+  <AI_Common_RangeParen> ({0})</AI_Common_RangeParen>
+  <AI_Common_HintSep> · {0}</AI_Common_HintSep>
+  <AI_Common_LabelValue>{0}: {1}</AI_Common_LabelValue>
+  <AI_Common_Yes>yes</AI_Common_Yes>
+  <AI_Common_No>no</AI_Common_No>
+  <AI_Common_Close>Close</AI_Common_Close>
+
+  <AI_Unit_Days>days</AI_Unit_Days>
+  <AI_Unit_Times>times</AI_Unit_Times>
+  <AI_Unit_Rounds>rounds</AI_Unit_Rounds>
+  <AI_Unit_Events>events</AI_Unit_Events>
+  <AI_Unit_Minutes>min</AI_Unit_Minutes>
+
+  <!-- ═══════════ Settings window ═══════════ -->
+  <AI_Settings_Title>AI Narrator</AI_Settings_Title>
+  <AI_Settings_ResetDefaults>Restore narrative defaults</AI_Settings_ResetDefaults>
+  <AI_Settings_OpenDebug>Debug window</AI_Settings_OpenDebug>
+  <AI_Settings_Save>Save settings</AI_Settings_Save>
+  <AI_Settings_Saved>AI Narrator settings saved.</AI_Settings_Saved>
+
+  <!-- Provider -->
+  <AI_Settings_SectionProvider>— Model provider —</AI_Settings_SectionProvider>
+  <AI_Settings_ProviderButton>Provider: {0}   (click to choose)</AI_Settings_ProviderButton>
+  <AI_Settings_ModelButton>Model: {0}   (click to pick from the common list)</AI_Settings_ModelButton>
+  <AI_Settings_ModelButtonNoPresets>Model: {0}   (this provider has no preset list; type a name below)</AI_Settings_ModelButtonNoPresets>
+  <AI_Settings_ModelLabel>Model name (editable; use it for models missing from the list above)</AI_Settings_ModelLabel>
+  <AI_Settings_EndpointLabel>Endpoint (full OpenAI-compatible URL)</AI_Settings_EndpointLabel>
+  <AI_Settings_KeyLabel>API key (kept in local mod settings only, never written to the save)</AI_Settings_KeyLabel>
+  <AI_Settings_KeyLabelLocal>API key (may be left empty for a local server)</AI_Settings_KeyLabelLocal>
+  <AI_Settings_Temperature>Temperature: {0}   (lower is steadier, higher is wilder)</AI_Settings_Temperature>
+  <AI_Settings_DirectorTimeout>Director call timeout: {0} min</AI_Settings_DirectorTimeout>
+  <AI_Settings_WriterTimeout>Writer call timeout: {0} min</AI_Settings_WriterTimeout>
+  <AI_Settings_MaxOutputTokens>Max output tokens</AI_Settings_MaxOutputTokens>
+
+  <!-- Pacing -->
+  <AI_Settings_SectionRhythm>— Narrative pacing —</AI_Settings_SectionRhythm>
+  <AI_Settings_AutoTrigger>Enable automatic triggering</AI_Settings_AutoTrigger>
+  <AI_Settings_AutoTriggerDesc>When off, the narrator only acts on "Request once" in the debug window.</AI_Settings_AutoTriggerDesc>
+  <AI_Settings_Mtb>Average incident interval: {0} days</AI_Settings_Mtb>
+  <AI_Settings_MinInterval>Minimum interval between calls</AI_Settings_MinInterval>
+  <AI_Settings_DailyCalls>Daily call limit</AI_Settings_DailyCalls>
+  <AI_Settings_LuaEvents>Enable Lua story events</AI_Settings_LuaEvents>
+  <AI_Settings_LuaEventsDesc>When off, the AI no longer writes original stories on the spot and can only pick vanilla incidents or rest: fewer calls, more predictable behavior. Stories already under way run to the end instead of stalling mid-stage.</AI_Settings_LuaEventsDesc>
+  <AI_Settings_LuaDaily>Daily Lua story limit</AI_Settings_LuaDaily>
+  <AI_Settings_ScriptRetries>Rewrite rounds after a rejected Lua script</AI_Settings_ScriptRetries>
+  <AI_Settings_ScriptRetriesHint>0 = give up on rejection; 1 = default; each extra round costs one more writer call</AI_Settings_ScriptRetriesHint>
+
+  <!-- Vanilla incident text -->
+  <AI_Settings_SectionIncidentText>— Vanilla incident text —</AI_Settings_SectionIncidentText>
+  <AI_Settings_AiAnnounce>Use the AI description for vanilla incidents</AI_Settings_AiAnnounce>
+  <AI_Settings_AiAnnounceDesc>When on, a vanilla incident fired by the AI has the letter body replaced by the model's announce line; the incident itself, the letter title and its interactions are unchanged. When off, the full vanilla letter text is shown. This only affects incidents the AI approves and fires, not the ones the game fires on its own.</AI_Settings_AiAnnounceDesc>
+
+  <!-- Quotas -->
+  <AI_Settings_SectionQuota>— Incident quotas (drag to the far right = unlimited) —</AI_Settings_SectionQuota>
+  <AI_Settings_QuotaWindow>Counting window (last N incidents)</AI_Settings_QuotaWindow>
+  <AI_Settings_ThreatBig>ThreatBig limit</AI_Settings_ThreatBig>
+  <AI_Settings_ThreatSmall>ThreatSmall limit</AI_Settings_ThreatSmall>
+  <AI_Settings_Misc>Misc limit</AI_Settings_Misc>
+  <AI_Settings_ConsecutiveThreat>Consecutive threat limit</AI_Settings_ConsecutiveThreat>
+  <AI_Settings_RepeatWindow>Same-incident cooldown</AI_Settings_RepeatWindow>
+
+  <!-- Prompt -->
+  <AI_Settings_SectionPrompt>— Narrative style prompt —</AI_Settings_SectionPrompt>
+  <AI_Settings_ExtraPrompt>Extra instructions (appended after the system prompt to steer the writing style; leave empty to add nothing)</AI_Settings_ExtraPrompt>
+  <AI_Settings_LongEvents>Allow long-running events (multi-stage / multi-day timers)</AI_Settings_LongEvents>
+  <AI_Settings_LongEventsDesc>When off, only short stories that resolve on the spot are written. Recommended off: AI-written long stories often lose coherence and never pay off their setups, which players tend to dislike; short ones (a letter, a choice, a consequence) hold up much better. Turn it on only when you want a long arc.</AI_Settings_LongEventsDesc>
+  <AI_Settings_OverridePrompt>Fully override the default system prompt (advanced)</AI_Settings_OverridePrompt>
+  <AI_Settings_OverridePromptDesc>When checked, the text below replaces the built-in persona; the JSON output contract is still appended so replies stay parsable.</AI_Settings_OverridePromptDesc>
+  <AI_Settings_OverrideOn>(enabled: the text above replaces the built-in persona)</AI_Settings_OverrideOn>
+  <AI_Settings_OverrideOff>(disabled: the text above has no effect)</AI_Settings_OverrideOff>
+
+  <!-- Def lookup -->
+  <AI_Settings_SectionLookup>— DefName lookup (multi-mod friendly) —</AI_Settings_SectionLookup>
+  <AI_Settings_DefLookup>Let the AI look up DefNames on demand</AI_Settings_DefLookup>
+  <AI_Settings_DefLookupDesc>Recommended on: instead of stuffing static per-category Def lists into the prompt, the model queries with LOOKUP when it needs a name, or writes @item/medicine and lets the game resolve it. When off, only catalog examples and exact names are left.</AI_Settings_DefLookupDesc>
+  <AI_Settings_LookupRounds>Max lookup rounds per request</AI_Settings_LookupRounds>
+  <AI_Settings_LookupRoundsHint>0 = no lookup rounds, no cap</AI_Settings_LookupRoundsHint>
+  <AI_Settings_LookupResults>Results per lookup</AI_Settings_LookupResults>
+  <AI_Settings_LookupResultsHint>no cap; too many may overflow the model context</AI_Settings_LookupResultsHint>
+  <AI_Settings_LegacyDefs>Fallback: use the legacy full Def lists</AI_Settings_LegacyDefs>
+  <AI_Settings_LegacyDefsDesc>For comparison or emergencies only. The legacy lists are truncated in load order, so with many mods the old bias returns: Defs from mods loaded later are never seen.</AI_Settings_LegacyDefsDesc>
+  <AI_Settings_StrictPlaceholders>Strict placeholder mode (debug)</AI_Settings_StrictPlaceholders>
+  <AI_Settings_StrictPlaceholdersDesc>Off by default: an ambiguous @category/keyword resolves to the best match. When on, ambiguous placeholders report the candidates and reject instead, which makes resolution behavior easier to observe.</AI_Settings_StrictPlaceholdersDesc>
+
+  <!-- Actions -->
+  <AI_Settings_SectionActions>— Action library (narrative tools the AI may use) —</AI_Settings_SectionActions>
+  <AI_Settings_Influence>AI influence over your colonists: {0}</AI_Settings_Influence>
+  <AI_Settings_InfluenceButton>   Click to cycle: none / psychology only / everything (including harm and death)</AI_Settings_InfluenceButton>
+  <AI_Settings_InfluenceNeverOption>None: pawn actions only affect pawns the AI spawned itself</AI_Settings_InfluenceNeverOption>
+  <AI_Settings_InfluencePsychologyOption>Psychology only: thoughts / mood / relations / traits / skills</AI_Settings_InfluencePsychologyOption>
+  <AI_Settings_InfluenceEverythingOption>Everything: also allows harm / kill / mental break</AI_Settings_InfluenceEverythingOption>
+  <AI_Settings_InfluenceHintAll>(dangerous actions are still capped at 3 per event; a failed validation rolls back the whole stage)</AI_Settings_InfluenceHintAll>
+  <AI_Settings_InfluenceHintLimited>(dangerous actions cannot target your colonists right now)</AI_Settings_InfluenceHintLimited>
+  <AI_Influence_Never>None</AI_Influence_Never>
+  <AI_Influence_Psychology>Psychology only</AI_Influence_Psychology>
+  <AI_Influence_Everything>Everything</AI_Influence_Everything>
+  <AI_Settings_SocialActions>Psychology and relationships (thoughts / mood / inspiration / traits / relations / breaks)</AI_Settings_SocialActions>
+  <AI_Settings_SocialActionsDesc>Lets pawns react emotionally and socially to what happens. When off, the AI can only describe events, not change anyone's state of mind.</AI_Settings_SocialActionsDesc>
+  <AI_Settings_SceneActions>Scenes and destruction (buildings / terrain / roofs / filth / animals / removal / collapse)</AI_Settings_SceneActions>
+  <AI_Settings_SceneActionsDesc>Leaves visible traces at the scene of an event. When off, stories cannot run this group of scene actions.</AI_Settings_SceneActionsDesc>
+  <AI_Settings_InteractiveActions>Interaction and presentation (narrative goals / camera / letter choices)</AI_Settings_InteractiveActions>
+  <AI_Settings_InteractiveActionsDesc>When off, stories cannot create narrative goals, move the camera, or use choices in the letter stack.</AI_Settings_InteractiveActionsDesc>
+
+  <!-- Status -->
+  <AI_Settings_SectionStatus>— Status —</AI_Settings_SectionStatus>
+  <AI_Settings_DebugLog>Debug logging</AI_Settings_DebugLog>
+  <AI_Settings_DebugLogDesc>Writes the key points of every decision to Player.log.</AI_Settings_DebugLogDesc>
+  <AI_Settings_CandidateCount>Candidate incidents: {0}</AI_Settings_CandidateCount>
+  <AI_Settings_Configured>Configuration: {0}</AI_Settings_Configured>
+  <AI_Settings_ConfiguredYes>complete</AI_Settings_ConfiguredYes>
+  <AI_Settings_ConfiguredNo>incomplete (the narrator stays silent)</AI_Settings_ConfiguredNo>
+  <AI_Settings_CurrentProvider>Current provider: {0}   ·   Model: {1}</AI_Settings_CurrentProvider>
+  <AI_Settings_FooterHint>The action buttons live in the fixed bar at the bottom of the window, so there is nothing to scroll down for.</AI_Settings_FooterHint>
+
+</LanguageData>

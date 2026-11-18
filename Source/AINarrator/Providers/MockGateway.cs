@@ -43,7 +43,8 @@ namespace Stellaris.AI
             try
             {
                 if (request != null && !await request.TryAuthorizeAttemptAsync(ct).ConfigureAwait(false))
-                    return LlmResult.Failure(LlmErrorKind.QuotaExceeded, "今日 API 调用已达上限");
+                    return LlmResult.Failure(LlmErrorKind.QuotaExceeded,
+                        Loc.Pick("今日 API 调用已达上限", "daily API call limit reached"));
             }
             catch (OperationCanceledException)
             {
@@ -58,20 +59,27 @@ namespace Stellaris.AI
             string prompt = (request?.UserPrompt ?? "") + "\n" + (request?.SystemPrompt ?? "");
 
             // 同一个 mock: 模式下要区分"导演"与"编剧"两次调用：看 prompt 里有没有编剧段。
-            bool isWriterCall = prompt.Contains("这次要写的剧情");
+            bool isWriterCall = prompt.Contains("这次要写的剧情")
+                                || prompt.Contains("The story to write this time");
 
             switch (Mode)
             {
                 case "rest":
                 case "no_event":
-                    return Done("{\"decision\":\"no_event\",\"reason\":\"mock: 殖民地刚经历过动荡，休整一天。\"}");
+                    return Done("{\"decision\":\"no_event\",\"reason\":\""
+                                + Loc.Pick("mock: 殖民地刚经历过动荡，休整一天。",
+                                    "mock: the colony just went through unrest; take a day to rest.")
+                                + "\"}");
 
                 case "garbage":
-                    return Done("抱歉，我无法以 JSON 回答这个问题。");
+                    return Done(Loc.Pick("抱歉，我无法以 JSON 回答这个问题。",
+                        "Sorry, I cannot answer that as JSON."));
 
                 case "hallucinate":
                     return Done("{\"decision\":\"vanilla_incident\",\"defName\":\"RaidEnemyFromTheFuture\","
-                                + "\"points_multiplier\":1.0,\"reason\":\"mock: 故意返回不存在的事件\"}");
+                                + "\"points_multiplier\":1.0,\"reason\":\""
+                                + Loc.Pick("mock: 故意返回不存在的事件", "mock: deliberately returns a nonexistent incident")
+                                + "\"}");
 
                 case "story":
                     return Done(isWriterCall ? BuildMockScript(prompt) : BuildStoryDecision());
@@ -80,38 +88,43 @@ namespace Stellaris.AI
                     return Done(isWriterCall
                         ? JsonSerializer.Serialize(new Dictionary<string, string>
                         {
-                            { "title", "坏脚本" },
+                            { "title", Loc.Pick("坏脚本", "Bad script") },
                             { "lua", "function run(ctx, state) this is not lua end" }
                         })
                         : BuildStoryDecision());
 
                 case "lookup_story":
                     if (!isWriterCall) return Done(BuildStoryDecision());
-                    if (!prompt.Contains("【查询结果")) return Done(LookupItem("药"));
+                    if (!HasLookupResult(prompt)) return Done(LookupItem(Loc.Pick("药", "medicine")));
                     return Done(BuildLookupScript(FirstResultDef(prompt)));
 
                 case "lookup_empty":
                     if (!isWriterCall) return Done(BuildStoryDecision());
-                    if (!prompt.Contains("【查询结果")) return Done(LookupItem("不存在的物品"));
+                    if (!HasLookupResult(prompt))
+                        return Done(LookupItem(Loc.Pick("不存在的物品", "nonexistent item")));
                     return Done(BuildLookupScript(null));
 
                 case "lookup_loop":
-                    return Done(isWriterCall ? LookupItem("药") : BuildStoryDecision());
+                    return Done(isWriterCall ? LookupItem(Loc.Pick("药", "medicine")) : BuildStoryDecision());
 
                 case "lookup_bad":
-                    if (isWriterCall) return Done("LOOKUP: 这不是 JSON");
+                    if (isWriterCall)
+                        return Done(Loc.Pick("LOOKUP: 这不是 JSON", "LOOKUP: this is not JSON"));
                     return Done(BuildStoryDecision());
 
                 case "lookup_incident":
                     if (isWriterCall) return Done(BuildMockScript(prompt));
-                    if (!prompt.Contains("【查询结果")) return Done(LookupIncident(""));
+                    if (!HasLookupResult(prompt)) return Done(LookupIncident(""));
                     {
                         string def = FirstResultDef(prompt);
                         return Done(string.IsNullOrEmpty(def)
-                            ? "{\"decision\":\"no_event\",\"reason\":\"mock: 查询没有结果\"}"
+                            ? "{\"decision\":\"no_event\",\"reason\":\""
+                              + Loc.Pick("mock: 查询没有结果", "mock: the lookup returned nothing") + "\"}"
                             : "{\"decision\":\"vanilla_incident\",\"defName\":\"" + def
-                              + "\",\"points_multiplier\":1.0,\"reason\":\"mock: 查询后选择事件\","
-                              + "\"announce\":\"mock 事件已安排\"}");
+                              + "\",\"points_multiplier\":1.0,\"reason\":\""
+                              + Loc.Pick("mock: 查询后选择事件", "mock: chose an incident after the lookup") + "\","
+                              + "\"announce\":\""
+                              + Loc.Pick("mock 事件已安排", "A mock incident has been scheduled.") + "\"}");
                     }
 
                 case "raid":
@@ -125,7 +138,10 @@ namespace Stellaris.AI
             List<(string def, string cat)> candidates = ParseCandidates(prompt);
             if (candidates.Count == 0)
             {
-                return Done("{\"decision\":\"no_event\",\"reason\":\"mock: prompt 里没有候选表，只能休整。\"}");
+                return Done("{\"decision\":\"no_event\",\"reason\":\""
+                            + Loc.Pick("mock: prompt 里没有候选表，只能休整。",
+                                "mock: the prompt has no candidate table, so the colony can only rest.")
+                            + "\"}");
             }
 
             int index = Math.Abs(Interlocked.Increment(ref _counter));
@@ -144,8 +160,12 @@ namespace Stellaris.AI
             string json = "{\"decision\":\"vanilla_incident\","
                           + "\"defName\":\"" + pick.def + "\","
                           + "\"points_multiplier\":1.0,"
-                          + "\"reason\":\"mock: 选择一个 " + pick.cat + " 事件。\","
-                          + "\"announce\":\"mock 事件已安排\"}";
+                          + "\"reason\":\""
+                          + Loc.Pick("mock: 选择一个 " + pick.cat + " 事件。",
+                              "mock: chose a " + pick.cat + " incident.")
+                          + "\","
+                          + "\"announce\":\""
+                          + Loc.Pick("mock 事件已安排", "A mock incident has been scheduled.") + "\"}";
 
             return Done(json);
         }
@@ -178,9 +198,16 @@ namespace Stellaris.AI
             Task.FromResult(LlmResult.Success(text));
 
         private static string BuildStoryDecision() =>
-            "{\"decision\":\"lua_event\",\"title\":\"山谷里的光\","
-            + "\"concept\":\"营地西侧的山谷夜里出现异常光芒，玩家要决定是否派人查看。\","
-            + "\"reason\":\"mock: 给一段原创剧情\"}";
+            "{\"decision\":\"lua_event\",\"title\":\""
+            + Loc.Pick("山谷里的光", "A Light in the Valley")
+            + "\","
+            + "\"concept\":\""
+            + Loc.Pick("营地西侧的山谷夜里出现异常光芒，玩家要决定是否派人查看。",
+                "An unnatural light appears at night in the valley west of camp; the player must decide whether to send someone to look.")
+            + "\","
+            + "\"reason\":\""
+            + Loc.Pick("mock: 给一段原创剧情", "mock: provide an original story event")
+            + "\"}";
 
         /// <summary>
         /// 生成一段真能跑的两阶段脚本（与调试窗「注入示例事件」共用同一份源码）。
@@ -190,7 +217,9 @@ namespace Stellaris.AI
 
         private static string LookupIncident(string query) =>
             "{\"decision\":\"lookup\",\"lookup\":{\"kind\":\"incident\",\"q\":\"" + query
-            + "\",\"limit\":5},\"reason\":\"mock: 先看看有哪些事件\"}";
+            + "\",\"limit\":5},\"reason\":\""
+            + Loc.Pick("mock: 先看看有哪些事件", "mock: look at the available incidents first")
+            + "\"}";
 
         private static string FirstResultDef(string prompt)
         {
@@ -206,7 +235,9 @@ namespace Stellaris.AI
             lua.Append("  local actions = {}\n");
             lua.Append("  if ctx.trigger == \"start\" then\n");
             lua.Append("    actions[#actions+1] = { opId = \"a1\", type = \"story.send_letter\",\n");
-            lua.Append("      args = { title = \"查询测试\", text = \"这是一段用查询结果写出的测试剧情。\" } }\n");
+            lua.Append("      args = { title = \"" + Loc.Pick("查询测试", "Lookup test")
+                       + "\", text = \"" + Loc.Pick("这是一段用查询结果写出的测试剧情。",
+                           "This is a test story written from the lookup results.") + "\" } }\n");
             if (!string.IsNullOrEmpty(defName))
             {
                 lua.Append("    actions[#actions+1] = { opId = \"a2\", type = \"thing.spawn\",\n");
@@ -220,7 +251,7 @@ namespace Stellaris.AI
 
             return JsonSerializer.Serialize(new Dictionary<string, string>
             {
-                { "title", "查询测试" },
+                { "title", Loc.Pick("查询测试", "Lookup test") },
                 { "lua", lua.ToString() }
             });
         }
@@ -229,6 +260,14 @@ namespace Stellaris.AI
         /// <summary>
         /// 生成一段真能跑的两阶段脚本（与调试窗「注入示例事件」共用同一份源码）。
         /// </summary>
+        /// <summary>查询结果块的中英文标题都可能出现（提示词跟着游戏语言走）。</summary>
+        private static bool HasLookupResult(string prompt) =>
+            prompt.Contains("【查询结果") || prompt.Contains("[Lookup result");
+
+        /// <summary>短线模式标记。两个语言的 system prompt 各有一句，缺一个就会误判成长线。</summary>
+        private static bool IsShortModePrompt(string prompt) =>
+            prompt.Contains("【本次是短线事件】") || prompt.Contains("【This is a short story】");
+
         private static string BuildMockScript(string prompt)
         {
             string threatDef = null;
@@ -244,7 +283,7 @@ namespace Stellaris.AI
             return JsonSerializer.Serialize(new Dictionary<string, string>
             {
                 { "title", SampleEventScript.Title },
-                { "lua", SampleEventScript.Build(threatDef, !prompt.Contains("本次必须是短线事件")) }
+                { "lua", SampleEventScript.Build(threatDef, !IsShortModePrompt(prompt)) }
             });
         }
 

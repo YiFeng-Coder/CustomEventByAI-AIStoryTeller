@@ -143,7 +143,8 @@ namespace Stellaris.AI
 
             if (string.IsNullOrEmpty(name))
             {
-                error = "缺少句柄名，请填写 handle:名字";
+                error = Loc.Pick("缺少句柄名，请填写 handle:名字",
+                    "Missing handle name; use handle:<name>");
                 return false;
             }
 
@@ -152,8 +153,10 @@ namespace Stellaris.AI
                 context.PlannedHandles.TryGetValue(name, out string producer))
             {
                 if (!requirePawn || producer == "pawn.spawn") return true;
-                error = $"句柄 \"{name}\" 由 {producer} 声明，角色动作需要角色句柄"
-                        + DeclarationHint(name, requirePawn);
+                error = Loc.Pick($"句柄 \"{name}\" 由 {producer} 声明，角色动作需要角色句柄"
+                                 + DeclarationHint(name, requirePawn),
+                    $"Handle \"{name}\" is declared by {producer}; this pawn action needs a pawn handle"
+                    + DeclarationHint(name, requirePawn));
                 return false;
             }
 
@@ -171,8 +174,10 @@ namespace Stellaris.AI
                 }
                 else
                 {
-                    error = $"句柄 \"{name}\" 在本动作前没有可用的声明"
-                            + RegisteredHandles(context) + DeclarationHint(name, requirePawn);
+                    error = Loc.Pick($"句柄 \"{name}\" 在本动作前没有可用的声明"
+                                     + RegisteredHandles(context) + DeclarationHint(name, requirePawn),
+                        $"Handle \"{name}\" is not declared before this action"
+                        + RegisteredHandles(context) + DeclarationHint(name, requirePawn));
                 }
 
                 return false;
@@ -181,14 +186,18 @@ namespace Stellaris.AI
             thing = FindById(record.thingId, context.Map);
             if (thing == null)
             {
-                error = $"句柄 \"{name}\" 已登记，当前地图上找不到该对象（可能已离开或被销毁）";
+                error = Loc.Pick($"句柄 \"{name}\" 已登记，当前地图上找不到该对象（可能已离开或被销毁）",
+                    $"Handle \"{name}\" is registered, but that object is not on this map"
+                    + " (it may have left or been destroyed)");
                 return false;
             }
 
             if (requirePawn && !(thing is Pawn))
             {
-                error = $"句柄 \"{name}\" 指向的对象类型为 {thing.GetType().Name}，角色动作需要角色句柄"
-                        + DeclarationHint(name, requirePawn);
+                error = Loc.Pick($"句柄 \"{name}\" 指向的对象类型为 {thing.GetType().Name}，角色动作需要角色句柄"
+                                 + DeclarationHint(name, requirePawn),
+                    $"Handle \"{name}\" points to a {thing.GetType().Name}; this pawn action needs a pawn handle"
+                    + DeclarationHint(name, requirePawn));
                 return false;
             }
 
@@ -207,32 +216,42 @@ namespace Stellaris.AI
             string wrongCase = FindCaseMismatch(before, all, name);
             if (wrongCase != null)
             {
-                return $"句柄 \"{name}\" 在本动作前没有可用的声明；本阶段声明的是 \"{wrongCase}\""
-                       + " —— 句柄区分大小写，请把动作里的名字改成完全一致";
+                return Loc.Pick($"句柄 \"{name}\" 在本动作前没有可用的声明；本阶段声明的是 \"{wrongCase}\""
+                                + " —— 句柄区分大小写，请把动作里的名字改成完全一致",
+                    $"Handle \"{name}\" is not declared before this action; this stage declares \"{wrongCase}\""
+                    + " — handle names are case-sensitive, so make the action use that exact name");
             }
 
             if (all != null && all.TryGetValue(name, out PlannedHandleInfo later) &&
                 later.ActionNumber >= (context != null ? context.ValidatingActionNumber : 0))
             {
                 int current = context != null ? context.ValidatingActionNumber : 0;
-                return $"句柄 \"{name}\" 要到第 {later.ActionNumber} 条 {later.ProducerType} 才声明，"
-                       + $"而当前正在校验第 {current} 条动作；请把生成动作移到引用之前";
+                return Loc.Pick($"句柄 \"{name}\" 要到第 {later.ActionNumber} 条 {later.ProducerType} 才声明，"
+                                + $"而当前正在校验第 {current} 条动作；请把生成动作移到引用之前",
+                    $"Handle \"{name}\" is only declared at action {later.ActionNumber} ({later.ProducerType}), "
+                    + $"but action {current} is being validated now; move the spawn action before the reference");
             }
 
             var sb = new StringBuilder();
-            sb.Append("句柄 \"").Append(name).Append("\" 在本动作前没有可用的声明");
+            sb.Append(Loc.Pick("句柄 \"", "Handle \"")).Append(name)
+              .Append(Loc.Pick("\" 在本动作前没有可用的声明", "\" is not declared before this action"));
 
             string beforeText = DescribeBefore(before);
             string laterText = DescribeLater(before, all);
             string noHandleText = DescribeWithoutHandle(context != null ? context.SpawnActionsWithoutHandle : null);
 
-            if (beforeText.Length > 0) sb.Append("；本动作前已声明：").Append(beforeText);
-            if (laterText.Length > 0) sb.Append("；本阶段稍后才声明：").Append(laterText);
-            if (noHandleText.Length > 0) sb.Append("；另有生成动作没写 args.handle：").Append(noHandleText);
+            if (beforeText.Length > 0)
+                sb.Append(Loc.Pick("；本动作前已声明：", "; declared before this action: ")).Append(beforeText);
+            if (laterText.Length > 0)
+                sb.Append(Loc.Pick("；本阶段稍后才声明：", "; declared later in this stage: ")).Append(laterText);
+            if (noHandleText.Length > 0)
+                sb.Append(Loc.Pick("；另有生成动作没写 args.handle：", "; spawn actions missing args.handle: "))
+                  .Append(noHandleText);
 
             if (beforeText.Length == 0 && laterText.Length == 0 && noHandleText.Length == 0)
             {
-                sb.Append("：本动作前没有任何句柄，本阶段也没有生成动作");
+                sb.Append(Loc.Pick("：本动作前没有任何句柄，本阶段也没有生成动作",
+                    ": there are no handles before this action, and this stage has no spawn actions"));
             }
 
             sb.Append(DeclarationHint(name, requirePawn));
@@ -274,12 +293,24 @@ namespace Stellaris.AI
             int shown = 0;
             for (int i = 0; i < names.Count && shown < 6; i++)
             {
-                if (shown > 0) sb.Append('、');
-                sb.Append(names[i]).Append("（").Append(before[names[i]]).Append('）');
+                if (shown > 0) sb.Append(Loc.Pick("、", ", "));
+                if (Loc.IsChinese)
+                {
+                    sb.Append(names[i]).Append("（").Append(before[names[i]]).Append('）');
+                }
+                else
+                {
+                    sb.Append(names[i]).Append(" (").Append(before[names[i]]).Append(')');
+                }
+
                 shown++;
             }
 
-            if (names.Count > shown) sb.Append(" 等 ").Append(names.Count).Append(" 个");
+            if (names.Count > shown)
+            {
+                sb.Append(Loc.Pick(" 等 " + names.Count + " 个", " (" + names.Count + " total)"));
+            }
+
             return sb.ToString();
         }
 
@@ -299,9 +330,18 @@ namespace Stellaris.AI
                 if (before != null && before.ContainsKey(key)) continue;
 
                 PlannedHandleInfo info = all[key];
-                if (shown > 0) sb.Append('、');
-                sb.Append(key).Append("（第 ").Append(info.ActionNumber).Append(" 条 ")
-                  .Append(info.ProducerType).Append('）');
+                if (shown > 0) sb.Append(Loc.Pick("、", ", "));
+                if (Loc.IsChinese)
+                {
+                    sb.Append(key).Append("（第 ").Append(info.ActionNumber).Append(" 条 ")
+                      .Append(info.ProducerType).Append('）');
+                }
+                else
+                {
+                    sb.Append(key).Append(" (action ").Append(info.ActionNumber).Append(", ")
+                      .Append(info.ProducerType).Append(')');
+                }
+
                 shown++;
             }
 
@@ -317,12 +357,23 @@ namespace Stellaris.AI
             for (int i = 0; i < withoutHandle.Count && shown < 6; i++)
             {
                 PlannedHandleInfo info = withoutHandle[i];
-                if (shown > 0) sb.Append('、');
-                sb.Append("第 ").Append(info.ActionNumber).Append(" 条 ").Append(info.ProducerType);
+                if (shown > 0) sb.Append(Loc.Pick("、", ", "));
+                if (Loc.IsChinese)
+                {
+                    sb.Append("第 ").Append(info.ActionNumber).Append(" 条 ").Append(info.ProducerType);
+                }
+                else
+                {
+                    sb.Append("action ").Append(info.ActionNumber).Append(' ').Append(info.ProducerType);
+                }
+
                 shown++;
             }
 
-            if (withoutHandle.Count > shown) sb.Append(" 等 ").Append(withoutHandle.Count).Append(" 个");
+            if (withoutHandle.Count > shown)
+            {
+                sb.Append(Loc.Pick(" 等 " + withoutHandle.Count + " 个", " (" + withoutHandle.Count + " total)"));
+            }
             return sb.ToString();
         }
 
@@ -342,20 +393,30 @@ namespace Stellaris.AI
             if (names.Count == 0) return "";
             names.Sort(StringComparer.Ordinal);
 
-            var sb = new StringBuilder("；本事件已声明的句柄：");
+            var sb = new StringBuilder(Loc.Pick("；本事件已声明的句柄：", "; handles already declared in this event: "));
             for (int i = 0; i < names.Count && i < 6; i++)
             {
-                if (i > 0) sb.Append('、');
+                if (i > 0) sb.Append(Loc.Pick("、", ", "));
                 sb.Append(names[i]);
             }
 
-            if (names.Count > 6) sb.Append(" 等 ").Append(names.Count).Append(" 个");
+            if (names.Count > 6)
+            {
+                sb.Append(Loc.Pick(" 等 " + names.Count + " 个", " (" + names.Count + " total)"));
+            }
+
             return sb.ToString();
         }
 
         private static string DeclarationHint(string name, bool requirePawn) => requirePawn
-            ? $"。请在本动作前用 pawn.spawn{{handle=\"{name}\"}} 声明角色，或引用前置阶段已生成的角色句柄"
-            : $"。请在本动作前用生成动作的 args.handle=\"{name}\" 声明句柄，或引用前置阶段已生成的对象";
+            ? Loc.Pick(
+                $"。请在本动作前用 pawn.spawn{{handle=\"{name}\"}} 声明角色，或引用前置阶段已生成的角色句柄",
+                $". Declare a pawn before this action with pawn.spawn{{handle=\"{name}\"}}, "
+                + "or reference a pawn handle created in an earlier stage")
+            : Loc.Pick(
+                $"。请在本动作前用生成动作的 args.handle=\"{name}\" 声明句柄，或引用前置阶段已生成的对象",
+                $". Declare the handle before this action with args.handle=\"{name}\" on a spawn action, "
+                + "or reference an object created in an earlier stage");
 
         /// <summary>按 ThingID 在地图上找（先找物品，再找 Pawn）。找不到返回 null。</summary>
         public static Thing FindById(string thingId, Map map)
@@ -433,37 +494,45 @@ namespace Stellaris.AI
             EventInstanceRecord instance = context.Instance;
             if (instance == null)
             {
-                error = "缺少事件实例，无法校验预算";
+                error = Loc.Pick("缺少事件实例，无法校验预算", "No event instance; cannot check the action budget");
                 return false;
             }
 
             switch (pool)
             {
                 case Pool.Spawn:
-                    return Apply(ref instance.spentSpawn, MaxSpawnPerInstance, "生成", pool, amount, planned, consume, out error);
+                    return Apply(ref instance.spentSpawn, MaxSpawnPerInstance, "生成", "spawn",
+                        pool, amount, planned, consume, out error);
                 case Pool.Danger:
-                    return Apply(ref instance.spentDanger, MaxDangerPerInstance, "危险", pool, amount, planned, consume, out error);
+                    return Apply(ref instance.spentDanger, MaxDangerPerInstance, "危险", "danger",
+                        pool, amount, planned, consume, out error);
                 case Pool.PawnEdit:
-                    return Apply(ref instance.spentPawnEdit, MaxPawnEditPerInstance, "角色编辑", pool, amount, planned, consume, out error);
+                    return Apply(ref instance.spentPawnEdit, MaxPawnEditPerInstance, "角色编辑", "pawn edit",
+                        pool, amount, planned, consume, out error);
                 case Pool.Social:
-                    return Apply(ref instance.spentSocial, MaxSocialPerInstance, "社交", pool, amount, planned, consume, out error);
+                    return Apply(ref instance.spentSocial, MaxSocialPerInstance, "社交", "social",
+                        pool, amount, planned, consume, out error);
                 case Pool.World:
-                    return Apply(ref instance.spentWorld, MaxWorldPerInstance, "世界", pool, amount, planned, consume, out error);
+                    return Apply(ref instance.spentWorld, MaxWorldPerInstance, "世界", "world",
+                        pool, amount, planned, consume, out error);
                 default:
-                    error = "未知的预算池";
+                    error = Loc.Pick("未知的预算池", "Unknown budget pool");
                     return false;
             }
         }
 
-        private static bool Apply(ref int spent, int cap, string label, Pool pool, int amount, int[] planned,
-            bool consume, out string error)
+        private static bool Apply(ref int spent, int cap, string labelZh, string labelEn, Pool pool, int amount,
+            int[] planned, bool consume, out string error)
         {
             error = null;
             int reserved = planned == null ? 0 : planned[(int)pool];
             if (amount <= 0 || (long)spent + reserved + amount > cap)
             {
-                error = label + "预算不足（已用 " + spent + "，本阶段计划 " + reserved
-                        + "，本动作需要 " + amount + "，上限 " + cap + "）";
+                error = Loc.Pick(
+                    labelZh + "预算不足（已用 " + spent + "，本阶段计划 " + reserved
+                    + "，本动作需要 " + amount + "，上限 " + cap + "）",
+                    labelEn + " budget exceeded (used " + spent + ", planned this stage " + reserved
+                    + ", this action needs " + amount + ", cap " + cap + ")");
                 return false;
             }
 

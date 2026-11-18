@@ -56,7 +56,8 @@ namespace Stellaris.AI
                 Label = def != null ? Clean(def.label, candidate.DefName, 80) : candidate.DefName,
                 Description = def != null ? Clean(def.description, "", 400) : "",
                 Mod = def != null ? ModOf(def) : "",
-                Facts = "类别 " + candidate.Category + " · 最低 " + candidate.MinPoints.ToString("F0") + " 点",
+                Facts = Loc.Pick("类别 " + candidate.Category + " · 最低 " + candidate.MinPoints.ToString("F0") + " 点",
+                    "category " + candidate.Category + " · min " + candidate.MinPoints.ToString("F0") + " points"),
                 Category = candidate.Category,
                 Numeric = candidate.MinPoints,
                 Def = def,
@@ -145,126 +146,128 @@ namespace Stellaris.AI
         {
             // ── 生成 / 物品 ────────────────────────────────────────────────
             _all.Add(Defs<ThingDef>(
-                "item", "物品", ActionCategoryMask.Spawn,
+                "item", Loc.Pick("物品", "items"), ActionCategoryMask.Spawn,
                 d => d.category == ThingCategory.Item && d.BaseMarketValue >= 1f && !d.IsCorpse,
-                d => "市场价 " + d.BaseMarketValue.ToString("F0") + " · 堆叠 " + d.stackLimit));
+                d => Loc.Pick("市场价 " + d.BaseMarketValue.ToString("F0") + " · 堆叠 " + d.stackLimit,
+                    "market value " + d.BaseMarketValue.ToString("F0") + " · stack " + d.stackLimit)));
 
             _all.Add(Defs<PawnKindDef>(
-                "pawnKind", "人形角色", ActionCategoryMask.Spawn | ActionCategoryMask.Pawn,
+                "pawnKind", Loc.Pick("人形角色", "humanlike pawn kinds"),
+                ActionCategoryMask.Spawn | ActionCategoryMask.Pawn,
                 d => d.race != null && d.race.race != null && d.race.race.Humanlike &&
                      d.GetType() == typeof(PawnKindDef),
-                d => "人形"));
+                d => Loc.Pick("人形", "humanlike")));
 
             _all.Add(Defs<PawnKindDef>(
-                "animal", "动物", ActionCategoryMask.Scene | ActionCategoryMask.Spawn,
+                "animal", Loc.Pick("动物", "animals"), ActionCategoryMask.Scene | ActionCategoryMask.Spawn,
                 d => d.race != null && d.race.race != null && !d.race.race.Humanlike &&
                      d.GetType() == typeof(PawnKindDef),
-                d => "非人形"));
+                d => Loc.Pick("非人形", "non-humanlike")));
 
             _all.Add(Defs<ThingDef>(
-                "building", "建筑", ActionCategoryMask.Scene,
+                "building", Loc.Pick("建筑", "buildings"), ActionCategoryMask.Scene,
                 d => d.category == ThingCategory.Building && d.building != null
                      && !d.mineable && !d.building.isNaturalRock,
-                d => "建筑"));
+                d => Loc.Pick("建筑", "building")));
 
             _all.Add(Defs<TerrainDef>(
-                "terrain", "地形", ActionCategoryMask.Scene,
+                "terrain", Loc.Pick("地形", "terrain types"), ActionCategoryMask.Scene,
                 d => d.natural,
-                d => "地形"));
+                d => Loc.Pick("地形", "terrain")));
 
             _all.Add(Defs<RoofDef>(
-                "roof", "屋顶", ActionCategoryMask.Scene,
+                "roof", Loc.Pick("屋顶", "roof types"), ActionCategoryMask.Scene,
                 d => true,
-                d => "屋顶"));
+                d => Loc.Pick("屋顶", "roof")));
 
             _all.Add(Defs<ThingDef>(
-                "filth", "污渍", ActionCategoryMask.Scene,
+                "filth", Loc.Pick("污渍", "filth types"), ActionCategoryMask.Scene,
                 d => typeof(Filth).IsAssignableFrom(d.thingClass),
-                d => "污渍"));
+                d => Loc.Pick("污渍", "filth")));
 
             // ── 地图 / 环境 ────────────────────────────────────────────────
             _all.Add(Defs<WeatherDef>(
-                "weather", "天气", ActionCategoryMask.Map,
+                "weather", Loc.Pick("天气", "weather types"), ActionCategoryMask.Map,
                 d => true,
-                d => "天气"));
+                d => Loc.Pick("天气", "weather")));
 
             _all.Add(Defs<GameConditionDef>(
-                "condition", "地图状况", ActionCategoryMask.Map,
+                "condition", Loc.Pick("地图状况", "map conditions"), ActionCategoryMask.Map,
                 d => true,
-                d => "地图状况"));
+                d => Loc.Pick("地图状况", "map condition")));
 
             _all.Add(Defs<DamageDef>(
-                "damage", "伤害类型", ActionCategoryMask.Map,
+                "damage", Loc.Pick("伤害类型", "damage types"), ActionCategoryMask.Map,
                 d => true,
-                d => "伤害类型"));
+                d => Loc.Pick("伤害类型", "damage type")));
 
             _all.Add(Defs<ThingDef>(
-                "plant", "植物", ActionCategoryMask.Map,
+                "plant", Loc.Pick("植物", "plants"), ActionCategoryMask.Map,
                 d => typeof(Plant).IsAssignableFrom(d.thingClass) && d.plant != null,
-                d => "植物"));
+                d => Loc.Pick("植物", "plant")));
 
             // ── 角色 / 社会 ────────────────────────────────────────────────
             _all.Add(Defs<HediffDef>(
-                "hediff", "负面状态", ActionCategoryMask.Pawn,
+                "hediff", Loc.Pick("负面状态", "negative hediffs"), ActionCategoryMask.Pawn,
                 d => d.isBad && d.hediffClass != null,
-                d => "负面状态"));
+                d => Loc.Pick("负面状态", "negative hediff")));
 
             _all.Add(Defs<SkillDef>(
-                "skill", "技能", ActionCategoryMask.Pawn,
+                "skill", Loc.Pick("技能", "skills"), ActionCategoryMask.Pawn,
                 d => true,
-                d => "技能"));
+                d => Loc.Pick("技能", "skill")));
 
             _all.Add(Defs<ThingDef>(
-                "apparel", "衣物", ActionCategoryMask.Pawn,
+                "apparel", Loc.Pick("衣物", "apparel"), ActionCategoryMask.Pawn,
                 d => typeof(Apparel).IsAssignableFrom(d.thingClass),
-                d => "衣物"));
+                d => Loc.Pick("衣物", "apparel")));
 
             _all.Add(Defs<ThingDef>(
-                "weapon", "武器", ActionCategoryMask.Pawn,
+                "weapon", Loc.Pick("武器", "weapons"), ActionCategoryMask.Pawn,
                 d => d.IsWeapon && d.equipmentType == EquipmentType.Primary,
-                d => "武器"));
+                d => Loc.Pick("武器", "weapon")));
 
             _all.Add(Defs<ThoughtDef>(
-                "thought", "想法", ActionCategoryMask.Social,
+                "thought", Loc.Pick("想法", "thoughts"), ActionCategoryMask.Social,
                 d => d.IsMemory,
-                d => "记忆类想法"));
+                d => Loc.Pick("记忆类想法", "memory thought")));
 
             _all.Add(Defs<MentalStateDef>(
-                "mentalState", "精神状态", ActionCategoryMask.Social,
+                "mentalState", Loc.Pick("精神状态", "mental states"), ActionCategoryMask.Social,
                 d => true,
-                d => "精神状态"));
+                d => Loc.Pick("精神状态", "mental state")));
 
             _all.Add(Defs<TraitDef>(
-                "trait", "特质", ActionCategoryMask.Social,
+                "trait", Loc.Pick("特质", "traits"), ActionCategoryMask.Social,
                 d => true,
-                d => "特质"));
+                d => Loc.Pick("特质", "trait")));
 
             _all.Add(Defs<PawnRelationDef>(
-                "relation", "关系", ActionCategoryMask.Social,
+                "relation", Loc.Pick("关系", "relations"), ActionCategoryMask.Social,
                 d => true,
-                d => "关系"));
+                d => Loc.Pick("关系", "relation")));
 
             _all.Add(Defs<InspirationDef>(
-                "inspiration", "灵感", ActionCategoryMask.Social,
+                "inspiration", Loc.Pick("灵感", "inspirations"), ActionCategoryMask.Social,
                 d => true,
-                d => "灵感"));
+                d => Loc.Pick("灵感", "inspiration")));
 
             // ── 世界 ───────────────────────────────────────────────────────
             _all.Add(Defs<ResearchProjectDef>(
-                "research", "研究", ActionCategoryMask.World,
+                "research", Loc.Pick("研究", "research projects"), ActionCategoryMask.World,
                 d => true,
-                d => "研究",
+                d => Loc.Pick("研究", "research"),
                 e => e.Def is ResearchProjectDef r && !r.IsFinished));
 
             _all.Add(Defs<QuestScriptDef>(
-                "quest", "任务模板", ActionCategoryMask.World,
+                "quest", Loc.Pick("任务模板", "quest templates"), ActionCategoryMask.World,
                 d => d.root != null,
-                d => "任务模板"));
+                d => Loc.Pick("任务模板", "quest template")));
 
             _all.Add(new DefKind
             {
                 Id = "faction",
-                Label = "派系",
+                Label = Loc.Pick("派系", "factions"),
                 Categories = ActionCategoryMask.World,
                 Cacheable = false,
                 Build = BuildFactions
@@ -273,7 +276,7 @@ namespace Stellaris.AI
             _all.Add(new DefKind
             {
                 Id = "incident",
-                Label = "原版事件",
+                Label = Loc.Pick("原版事件", "vanilla incidents"),
                 Categories = ActionCategoryMask.Narrative,
                 Cacheable = false,
                 Build = BuildIncidents
@@ -376,7 +379,7 @@ namespace Stellaris.AI
                         Label = label,
                         Description = faction.def.description ?? "",
                         Mod = faction.def.modContentPack != null ? faction.def.modContentPack.Name : "",
-                        Facts = "派系"
+                        Facts = Loc.Pick("派系", "faction")
                     };
 
                     entry.NDef = DefEntry.NormalizeText(entry.DefName);

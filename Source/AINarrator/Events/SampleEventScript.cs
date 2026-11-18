@@ -15,11 +15,26 @@ namespace Stellaris.AI
     /// </summary>
     public static class SampleEventScript
     {
-        public const string Title = "山谷里的光";
+        public static string Title => Loc.Pick("山谷里的光", "A Light in the Valley");
 
         public static string Build(string threatDefName, bool allowLong)
         {
             var lua = new StringBuilder(2048);
+
+            string startTitle = Loc.Pick("山谷里的光", "A Light in the Valley");
+            string startText = Loc.Pick("夜里，营地西侧的山谷传来低沉的轰鸣，有人看见雪地上浮起一层淡蓝色的光。",
+                "That night a low rumble rolled out of the valley west of camp, and someone saw a pale blue glow rising off the snow.");
+            string choicePrompt = Loc.Pick("要派人去看看吗？", "Send someone to take a look?");
+            string goLabel = Loc.Pick("带人前往山谷", "Take a group to the valley");
+            string stayLabel = Loc.Pick("按兵不动", "Hold position");
+            string arrivedTitle = Loc.Pick("抵达山谷", "Arrival at the valley");
+            string arrivedText = Loc.Pick("光来自一处塌陷的旧反应堆，冷却液还在滴落。",
+                "The glow comes from a collapsed old reactor; coolant is still dripping from it.");
+            string stayText = Loc.Pick("我们选择按兵不动，山谷的光在两天后熄灭了。",
+                "We chose to hold position, and the light in the valley went out two days later.");
+            string fadedTitle = Loc.Pick("光熄灭了", "The light went out");
+            string fadedText = Loc.Pick("山谷的方向重新归于黑暗，只剩风声。",
+                "The direction of the valley is dark again, with only the wind to be heard.");
 
             lua.Append("function run(ctx, state)\n");
             lua.Append("  local actions = {}\n");
@@ -27,10 +42,10 @@ namespace Stellaris.AI
 
             lua.Append("  if ctx.trigger == \"start\" then\n");
             lua.Append("    actions[#actions+1] = { opId = \"s1\", type = \"story.send_letter\", "
-                       + "args = { title = \"山谷里的光\", text = \"夜里，营地西侧的山谷传来低沉的轰鸣，有人看见雪地上浮起一层淡蓝色的光。\" } }\n");
+                       + "args = { title = \"" + startTitle + "\", text = \"" + startText + "\" } }\n");
             lua.Append("    actions[#actions+1] = { opId = \"s2\", type = \"story.show_choices\", "
-                       + "args = { prompt = \"要派人去看看吗？\", options = { "
-                       + "{ id = \"go\", label = \"带人前往山谷\" }, { id = \"stay\", label = \"按兵不动\" } } } }\n");
+                       + "args = { prompt = \"" + choicePrompt + "\", options = { "
+                       + "{ id = \"go\", label = \"" + goLabel + "\" }, { id = \"stay\", label = \"" + stayLabel + "\" } } } }\n");
             lua.Append("    s.stage = \"await_choice\"\n");
             if (allowLong)
             {
@@ -47,7 +62,7 @@ namespace Stellaris.AI
             lua.Append("    local c = ctx.payload.choice\n");
             lua.Append("    if c == \"go\" then\n");
             lua.Append("      actions[#actions+1] = { opId = \"s3\", type = \"story.send_letter\", "
-                       + "args = { title = \"抵达山谷\", text = \"光来自一处塌陷的旧反应堆，冷却液还在滴落。\" } }\n");
+                       + "args = { title = \"" + arrivedTitle + "\", text = \"" + arrivedText + "\" } }\n");
             if (!string.IsNullOrEmpty(threatDefName))
             {
                 lua.Append("      actions[#actions+1] = { opId = \"s4\", type = \"incident.fire\", "
@@ -56,7 +71,7 @@ namespace Stellaris.AI
 
             lua.Append("    else\n");
             lua.Append("      actions[#actions+1] = { opId = \"s5\", type = \"story.remember\", "
-                       + "args = { text = \"我们选择按兵不动，山谷的光在两天后熄灭了。\" } }\n");
+                       + "args = { text = \"" + stayText + "\" } }\n");
             lua.Append("    end\n");
             lua.Append("    s.stage = \"done\"\n");
             lua.Append("    return rim.aist.json_encode({ actions = actions, next_state = s, done = true })\n");
@@ -64,7 +79,7 @@ namespace Stellaris.AI
             lua.Append("  elseif ctx.trigger == \"game_timer_due\" then\n");
             lua.Append("    if s.stage == \"await_choice\" then\n");
             lua.Append("      actions[#actions+1] = { opId = \"s6\", type = \"story.send_letter\", "
-                       + "args = { title = \"光熄灭了\", text = \"山谷的方向重新归于黑暗，只剩风声。\" } }\n");
+                       + "args = { title = \"" + fadedTitle + "\", text = \"" + fadedText + "\" } }\n");
             lua.Append("    end\n");
             lua.Append("    s.stage = \"idle\"\n");
             lua.Append("    return rim.aist.json_encode({ actions = actions, next_state = s, done = true })\n");
@@ -80,7 +95,7 @@ namespace Stellaris.AI
         // ─────────────────────────────────────────────────────────────────────
         // P4 演示：一次过覆盖新增的心理 / 场景 / 交互动作
         // ─────────────────────────────────────────────────────────────────────
-        public const string DemoTitle = "P4 动作演示";
+        public static string DemoTitle => Loc.Pick("P4 动作演示", "P4 action demo");
 
         public static string BuildP4Demo()
         {
@@ -88,12 +103,24 @@ namespace Stellaris.AI
             string animal = PickPawnKind(false);
             string thought = PickThought();
             string trait = PickTrait();
-            string inspiration = PickInspiration();
+            Pawn colonist = PickColonist();
+            string inspiration = PickInspiration(colonist);
             string relation = PickRelation();
             string terrain = TerrainDefOf.Soil != null ? TerrainDefOf.Soil.defName : null;
             string filth = ThingDefOf.Filth_Blood != null ? ThingDefOf.Filth_Blood.defName : null;
             string wall = ThingDefOf.Wall != null ? ThingDefOf.Wall.defName : null;
             string wood = ThingDefOf.WoodLog != null ? ThingDefOf.WoodLog.defName : null;
+
+            string demoTitle = Loc.Pick("P4 动作演示", "P4 action demo");
+            string demoText = Loc.Pick("这一条脚本会把新增动作全部走一遍。",
+                "This script walks through every newly added action once.");
+            string objectiveText = Loc.Pick("把山谷里的那层光查清楚", "Find out what that glow in the valley is");
+            string letterPrompt = Loc.Pick("这封信放在信件栏里，不弹窗。你想怎么做？",
+                "This letter sits in the letter stack without a popup. What will you do?");
+            string goLabel = Loc.Pick("去看看", "Go and take a look");
+            string waitLabel = Loc.Pick("再等等", "Wait a while longer");
+            string demoDoneTitle = Loc.Pick("演示结束", "Demo finished");
+            string demoDonePrefix = Loc.Pick("你选择了：", "You chose: ");
 
             var lua = new StringBuilder(4096);
             lua.Append("function run(ctx, state)\n");
@@ -101,7 +128,7 @@ namespace Stellaris.AI
             lua.Append("  local s = state\n");
             lua.Append("  if ctx.trigger == \"start\" then\n");
 
-            lua.Append("    actions[#actions+1] = { opId = \"d1\", type = \"story.send_letter\", args = { title = \"P4 动作演示\", text = \"这一条脚本会把新增动作全部走一遍。\" } }\n");
+            lua.Append("    actions[#actions+1] = { opId = \"d1\", type = \"story.send_letter\", args = { title = \"" + demoTitle + "\", text = \"" + demoText + "\" } }\n");
             lua.Append("    actions[#actions+1] = { opId = \"d2\", type = \"story.focus\", args = { spot = \"center\" } }\n");
             if (!string.IsNullOrEmpty(filth))
             {
@@ -135,7 +162,8 @@ namespace Stellaris.AI
 
                 if (!string.IsNullOrEmpty(inspiration))
                 {
-                    lua.Append("    actions[#actions+1] = { opId = \"d11\", type = \"pawn.inspiration\", args = { who = \"handle:p1\", inspirationDef = \"" + inspiration + "\" } }\n");
+                    // 原版灵感只能给殖民者；p1 是刚生成的 NPC，指向它会被校验拒绝。
+                    lua.Append("    actions[#actions+1] = { opId = \"d11\", type = \"pawn.inspiration\", args = { who = \"colonist:" + colonist.LabelShort + "\", inspirationDef = \"" + inspiration + "\", replace = true } }\n");
                 }
 
                 if (!string.IsNullOrEmpty(trait))
@@ -150,14 +178,14 @@ namespace Stellaris.AI
             }
 
             lua.Append("    actions[#actions+1] = { opId = \"d14\", type = \"map.remove\", args = { spot = \"random\", radius = 2, only = \"plants,filth\" } }\n");
-            lua.Append("    actions[#actions+1] = { opId = \"d15\", type = \"story.objective\", args = { text = \"把山谷里的那层光查清楚\", days = 3 } }\n");
-            lua.Append("    actions[#actions+1] = { opId = \"d16\", type = \"story.choice_letter\", args = { prompt = \"这封信放在信件栏里，不弹窗。你想怎么做？\", options = { { id = \"go\", label = \"去看看\" }, { id = \"wait\", label = \"再等等\" } } } }\n");
+            lua.Append("    actions[#actions+1] = { opId = \"d15\", type = \"story.objective\", args = { text = \"" + objectiveText + "\", days = 3 } }\n");
+            lua.Append("    actions[#actions+1] = { opId = \"d16\", type = \"story.choice_letter\", args = { prompt = \"" + letterPrompt + "\", options = { { id = \"go\", label = \"" + goLabel + "\" }, { id = \"wait\", label = \"" + waitLabel + "\" } } } }\n");
 
             lua.Append("    s.stage = \"await_choice\"\n");
             lua.Append("    return rim.aist.json_encode({ actions = actions, next_state = s, stage = \"await_choice\" })\n");
 
             lua.Append("  elseif ctx.trigger == \"choice_selected\" then\n");
-            lua.Append("    actions[#actions+1] = { opId = \"d17\", type = \"story.send_letter\", args = { title = \"演示结束\", text = \"你选择了：\" .. tostring(ctx.payload.choice) } }\n");
+            lua.Append("    actions[#actions+1] = { opId = \"d17\", type = \"story.send_letter\", args = { title = \"" + demoDoneTitle + "\", text = \"" + demoDonePrefix + "\" .. tostring(ctx.payload.choice) } }\n");
             lua.Append("    return rim.aist.json_encode({ actions = actions, next_state = s, done = true })\n");
             lua.Append("  end\n");
             lua.Append("  return rim.aist.json_encode({ actions = actions, next_state = s })\n");
@@ -199,11 +227,28 @@ namespace Stellaris.AI
             return null;
         }
 
-        private static string PickInspiration()
+        private static Pawn PickColonist()
         {
+            Map map = Find.AnyPlayerHomeMap;
+            if (map == null || map.mapPawns == null) return null;
+
+            foreach (Pawn pawn in map.mapPawns.FreeColonistsSpawned)
+            {
+                if (pawn != null && !pawn.Dead) return pawn;
+            }
+
+            return null;
+        }
+
+        private static string PickInspiration(Pawn pawn)
+        {
+            if (pawn == null) return null;
+
             foreach (InspirationDef def in DefDatabase<InspirationDef>.AllDefs)
             {
-                if (def != null) return def.defName;
+                if (def == null || def.Worker == null) continue;
+                if (!def.Worker.InspirationCanOccur(pawn)) continue;
+                return def.defName;
             }
 
             return null;

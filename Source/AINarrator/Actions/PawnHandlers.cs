@@ -16,8 +16,11 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Dangerous;
 
         public string Describe() =>
-            "pawn.hurt{who=handle:p1 | colonist:名字, hediffDef=状态 DefName（外伤：Cut / Bruise / Gunshot；疾病：WoundInfection）, part=可选（Leg / Arm / Head / 左腿）, damage=外伤伤害点数（1~部位血量，如躯干 40）, severity=疾病严重度 0.05~0.95（1=死亡）} " +
-            "—— 外伤用 damage（Cut/Gunshot/Bruise…），疾病用 severity（Flu/Plague/WoundInfection…）；外伤不写 part 自动挑一个；能否指向你的殖民者由设置决定";
+            Loc.Pick(
+                "pawn.hurt{who=handle:p1 | colonist:名字, hediffDef=状态 DefName（外伤：Cut / Bruise / Gunshot；疾病：WoundInfection）, part=可选（Leg / Arm / Head / 左腿）, damage=外伤伤害点数（1~部位血量，如躯干 40）, severity=疾病严重度 0.05~0.95（1=死亡）} " +
+                "—— 外伤用 damage（Cut/Gunshot/Bruise…），疾病用 severity（Flu/Plague/WoundInfection…）；外伤不写 part 自动挑一个；能否指向你的殖民者由设置决定",
+                "pawn.hurt{who=handle:p1 | colonist:name, hediffDef=hediff DefName (injuries: Cut / Bruise / Gunshot; diseases: WoundInfection), part=optional (Leg / Arm / Head / left leg), damage=injury damage points (1~the part's hit points, e.g. 40 for a torso), severity=disease severity 0.05~0.95 (1 = death)} " +
+                "— injuries use damage (Cut/Gunshot/Bruise…), diseases use severity (Flu/Plague/WoundInfection…); an injury without part picks a body part automatically; whether you may target your own colonists depends on the settings");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -25,15 +28,18 @@ namespace Stellaris.AI
             if (!TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
 
             string name = a.ArgString("hediffDef");
-            if (name.Length == 0) { error = "缺少 hediffDef"; return false; }
+            if (name.Length == 0) { error = Loc.Pick("缺少 hediffDef", "missing hediffDef"); return false; }
 
             HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(name);
-            if (def == null) { error = "不存在的 HediffDef：" + name; return false; }
+            if (def == null) { error = Loc.Pick("不存在的 HediffDef：" + name, "unknown HediffDef: " + name); return false; }
 
             if (BodyPartPicker.IsStructural(def))
             {
-                error = name + " 是身体结构类状态（缺肢 / 假肢 / 植入物），不能用 pawn.hurt 施加；"
-                        + "受伤请用 Cut / Bruise / Gunshot 这类外伤";
+                error = Loc.Pick(
+                        name + " 是身体结构类状态（缺肢 / 假肢 / 植入物），不能用 pawn.hurt 施加；"
+                        + "受伤请用 Cut / Bruise / Gunshot 这类外伤",
+                        name + " is a structural body hediff (missing part / prosthetic / implant), so pawn.hurt cannot apply it; "
+                        + "for injuries use an injury hediff such as Cut / Bruise / Gunshot");
                 return false;
             }
 
@@ -56,7 +62,7 @@ namespace Stellaris.AI
                 else if (BodyPartPicker.RequiresPart(def))
                 {
                     part = BodyPartPicker.PickForInjury(pawn);
-                    if (part == null) { error = "目标没有可受伤的身体部位"; return false; }
+                    if (part == null) { error = Loc.Pick("目标没有可受伤的身体部位", "the target has no body part that can be injured"); return false; }
                 }
             }
 
@@ -64,21 +70,23 @@ namespace Stellaris.AI
             {
                 if (damage >= 0f)
                 {
-                    if (damage < 1f) { error = "damage 至少 1 点"; return false; }
+                    if (damage < 1f) { error = Loc.Pick("damage 至少 1 点", "damage must be at least 1"); return false; }
                     if (part != null)
                     {
                         float max = BodyPartPicker.PartHitPoints(part);
                         if (damage > max)
                         {
-                            error = "damage 超过 " + part.def.defName + " 的血量（上限 " + max.ToString("F0")
-                                    + " 点）；要更重的伤请先确认部位";
+                            error = Loc.Pick("damage 超过 " + part.def.defName + " 的血量（上限 " + max.ToString("F0")
+                                    + " 点）；要更重的伤请先确认部位",
+                                    "damage exceeds the hit points of " + part.def.defName + " (cap " + max.ToString("F0")
+                                    + "); for a heavier injury, name the body part first");
                             return false;
                         }
                     }
                 }
                 else if (severity >= 0f && (severity <= 0f || severity > 1f))
                 {
-                    error = "外伤的 severity 表示「部位血量的比例」（0.05~1）；要精确点数请改用 damage";
+                    error = Loc.Pick("外伤的 severity 表示「部位血量的比例」（0.05~1）；要精确点数请改用 damage", "for an injury, severity is a fraction of the part's hit points (0.05~1); use damage for exact points");
                     return false;
                 }
             }
@@ -86,22 +94,25 @@ namespace Stellaris.AI
             {
                 if (damage >= 0f)
                 {
-                    error = name + " 不是外伤，请用 severity（0.05~0.95），不要写 damage";
+                    error = Loc.Pick(name + " 不是外伤，请用 severity（0.05~0.95），不要写 damage", name + " is not an injury; use severity (0.05~0.95) and do not pass damage");
                     return false;
                 }
 
                 float value = severity < 0f ? 0.3f : severity;
                 if (value <= 0f || value >= 1f)
                 {
-                    error = "severity 必须在 0.05..0.95（1 会直接致死，请用 pawn.kill）";
+                    error = Loc.Pick("severity 必须在 0.05..0.95（1 会直接致死，请用 pawn.kill）", "severity must be within 0.05..0.95 (1 kills outright; use pawn.kill)");
                     return false;
                 }
 
                 if (def.lethalSeverity > 0f && value >= def.lethalSeverity)
                 {
-                    error = name + " 的 lethalSeverity 是 " + def.lethalSeverity.ToString("F2")
+                    error = Loc.Pick(name + " 的 lethalSeverity 是 " + def.lethalSeverity.ToString("F2")
                             + "，severity 到值即死亡；请把 severity 降到 "
-                            + (def.lethalSeverity * 0.9f).ToString("F2") + " 以下";
+                            + (def.lethalSeverity * 0.9f).ToString("F2") + " 以下",
+                            name + "'s lethalSeverity is " + def.lethalSeverity.ToString("F2")
+                            + "; reaching it kills the pawn, so keep severity below "
+                            + (def.lethalSeverity * 0.9f).ToString("F2"));
                     return false;
                 }
             }
@@ -115,7 +126,7 @@ namespace Stellaris.AI
             if (!TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
 
             HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(a.ArgString("hediffDef"));
-            if (def == null) { error = "动作所需定义已不可用"; return false; }
+            if (def == null) { error = Loc.Pick("动作所需定义已不可用", "the def this action needs is no longer available"); return false; }
 
             BodyPartRecord part = null;
             string partToken = a.ArgString("part");
@@ -127,7 +138,7 @@ namespace Stellaris.AI
             {
                 // 关键：以前这里不传 part，生成的是 "(no body part)" 的伤，健康面板与治疗逻辑都会出错。
                 part = BodyPartPicker.PickForInjury(pawn);
-                if (part == null) { error = "目标没有可受伤的身体部位"; return false; }
+                if (part == null) { error = Loc.Pick("目标没有可受伤的身体部位", "the target has no body part that can be injured"); return false; }
             }
 
             float finalSeverity = ComputeSeverity(a, def, part, out error);
@@ -136,7 +147,7 @@ namespace Stellaris.AI
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
 
             Hediff hediff = HediffMaker.MakeHediff(def, pawn, part);
-            if (hediff == null) { error = "未能创建健康状态"; return false; }
+            if (hediff == null) { error = Loc.Pick("未能创建健康状态", "failed to create the hediff"); return false; }
 
             hediff.Severity = finalSeverity;
             pawn.health.AddHediff(hediff, part);
@@ -198,8 +209,11 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "pawn.heal{who=handle:p1 | colonist:名字 | best:技能名, hediffDef=可选（常用：Cut / WoundInfection）, part=可选} " +
-            "—— 指定状态就移除它（同一状态在多处时全部移除）；不指定就移除该角色所有负面状态";
+            Loc.Pick(
+                "pawn.heal{who=handle:p1 | colonist:名字 | best:技能名, hediffDef=可选（常用：Cut / WoundInfection）, part=可选} " +
+                "—— 指定状态就移除它（同一状态在多处时全部移除）；不指定就移除该角色所有负面状态",
+                "pawn.heal{who=handle:p1 | colonist:name | best:skill name, hediffDef=optional (common: Cut / WoundInfection), part=optional} " +
+                "— with a hediff, remove it (every copy, on every body part); without one, remove all negative hediffs from that pawn");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -209,7 +223,7 @@ namespace Stellaris.AI
             string name = a.ArgString("hediffDef");
             if (name.Length > 0 && DefDatabase<HediffDef>.GetNamedSilentFail(name) == null)
             {
-                error = "不存在的 HediffDef：" + name;
+                error = Loc.Pick("不存在的 HediffDef：" + name, "unknown HediffDef: " + name);
                 return false;
             }
 
@@ -229,7 +243,7 @@ namespace Stellaris.AI
         {
             error = null;
             if (!PawnHurtHandler.TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
-            if (pawn.health == null || pawn.health.hediffSet == null) { error = "目标没有健康系统"; return false; }
+            if (pawn.health == null || pawn.health.hediffSet == null) { error = Loc.Pick("目标没有健康系统", "the target has no health system"); return false; }
 
             BodyPartRecord part = null;
             string partToken = a.ArgString("part");
@@ -242,7 +256,7 @@ namespace Stellaris.AI
             if (name.Length > 0)
             {
                 HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(name);
-                if (def == null) { error = "动作所需定义已不可用"; return false; }
+                if (def == null) { error = Loc.Pick("动作所需定义已不可用", "the def this action needs is no longer available"); return false; }
 
                 var matches = new List<Hediff>();
                 foreach (Hediff hediff in pawn.health.hediffSet.hediffs)
@@ -252,7 +266,7 @@ namespace Stellaris.AI
                     matches.Add(hediff);
                 }
 
-                if (matches.Count == 0) { error = "目标没有指定的健康状态"; return false; }
+                if (matches.Count == 0) { error = Loc.Pick("目标没有指定的健康状态", "the target does not have that hediff"); return false; }
                 if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
 
                 for (int i = 0; i < matches.Count; i++) pawn.health.RemoveHediff(matches[i]);
@@ -267,7 +281,7 @@ namespace Stellaris.AI
                 toRemove.Add(hediff);
             }
 
-            if (toRemove.Count == 0) { error = "目标没有可移除的负面状态"; return false; }
+            if (toRemove.Count == 0) { error = Loc.Pick("目标没有可移除的负面状态", "the target has no negative hediffs to remove"); return false; }
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
             for (int i = 0; i < toRemove.Count; i++) pawn.health.RemoveHediff(toRemove[i]);
             return true;
@@ -285,7 +299,9 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Dangerous;
 
         public string Describe() =>
-            "pawn.kill{who=handle:p1 | colonist:名字} —— 让该角色死亡（真实死亡流程，会产生尸体，计入危险预算）；能否指向你的殖民者由设置决定";
+            Loc.Pick(
+                "pawn.kill{who=handle:p1 | colonist:名字} —— 让该角色死亡（真实死亡流程，会产生尸体，计入危险预算）；能否指向你的殖民者由设置决定",
+                "pawn.kill{who=handle:p1 | colonist:name} — kill that pawn (real death pipeline: it produces a corpse and counts against the danger budget); whether you may target your own colonists depends on the settings");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -301,7 +317,7 @@ namespace Stellaris.AI
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.Danger, 1, out error)) return false;
 
             pawn.Kill(null, null);
-            if (!pawn.Dead) { error = "目标未死亡"; return false; }
+            if (!pawn.Dead) { error = Loc.Pick("目标未死亡", "the target did not die"); return false; }
             return true;
         }
     }
@@ -317,8 +333,11 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Neutral;
 
         public string Describe() =>
-            "pawn.gear{who=handle:p1 | colonist:名字, thingDef=装备 DefName 或 @apparel/关键词, slot=apparel|weapon} " +
-            "—— 给该角色穿戴/装备一件物品；会检查身体部位是否够用";
+            Loc.Pick(
+                "pawn.gear{who=handle:p1 | colonist:名字, thingDef=装备 DefName 或 @apparel/关键词, slot=apparel|weapon} " +
+                "—— 给该角色穿戴/装备一件物品；会检查身体部位是否够用",
+                "pawn.gear{who=handle:p1 | colonist:name, thingDef=gear DefName or @apparel/keyword, slot=apparel|weapon} " +
+                "— wear or equip one item on that pawn; it checks that the pawn has the body parts the item needs");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -326,15 +345,15 @@ namespace Stellaris.AI
             if (!PawnHurtHandler.TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
 
             string name = a.ArgString("thingDef");
-            if (name.Length == 0) { error = "缺少 thingDef"; return false; }
+            if (name.Length == 0) { error = Loc.Pick("缺少 thingDef", "missing thingDef"); return false; }
 
             ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(name);
-            if (def == null) { error = "不存在的 ThingDef：" + name; return false; }
+            if (def == null) { error = Loc.Pick("不存在的 ThingDef：" + name, "unknown ThingDef: " + name); return false; }
 
             string slot = a.ArgString("slot", "apparel").ToLowerInvariant();
             if (slot != "apparel" && slot != "weapon")
             {
-                error = "slot 只能是 apparel 或 weapon";
+                error = Loc.Pick("slot 只能是 apparel 或 weapon", "slot must be apparel or weapon");
                 return false;
             }
 
@@ -349,13 +368,13 @@ namespace Stellaris.AI
                 if (slot == "apparel" &&
                     (def.apparel == null || !typeof(Apparel).IsAssignableFrom(def.thingClass)))
                 {
-                    error = def.defName + " 不是可穿的衣物";
+                    error = Loc.Pick(def.defName + " 不是可穿的衣物", def.defName + " is not wearable apparel");
                     return false;
                 }
 
                 if (slot == "weapon" && !def.IsWeapon)
                 {
-                    error = def.defName + " 不是武器";
+                    error = Loc.Pick(def.defName + " 不是武器", def.defName + " is not a weapon");
                     return false;
                 }
             }
@@ -369,7 +388,7 @@ namespace Stellaris.AI
             if (!PawnHurtHandler.TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
 
             ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(a.ArgString("thingDef"));
-            if (def == null) { error = "动作所需定义已不可用"; return false; }
+            if (def == null) { error = Loc.Pick("动作所需定义已不可用", "the def this action needs is no longer available"); return false; }
 
             string slot = a.ArgString("slot", "apparel").ToLowerInvariant();
 
@@ -379,7 +398,7 @@ namespace Stellaris.AI
                 if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
 
                 Apparel apparel = ThingMaker.MakeThing(def) as Apparel;
-                if (apparel == null) { error = "该定义不是可穿戴物"; return false; }
+                if (apparel == null) { error = Loc.Pick("该定义不是可穿戴物", "that def is not wearable"); return false; }
 
                 try
                 {
@@ -387,7 +406,7 @@ namespace Stellaris.AI
                 }
                 catch (Exception e)
                 {
-                    error = "穿戴失败：" + e.Message;
+                    error = Loc.Pick("穿戴失败：" + e.Message, "failed to wear it: " + e.Message);
                     return false;
                 }
 
@@ -398,7 +417,7 @@ namespace Stellaris.AI
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
 
             ThingWithComps equipment = ThingMaker.MakeThing(def) as ThingWithComps;
-            if (equipment == null) { error = "该定义不是可装备物"; return false; }
+            if (equipment == null) { error = Loc.Pick("该定义不是可装备物", "that def is not equippable"); return false; }
 
             try
             {
@@ -406,7 +425,7 @@ namespace Stellaris.AI
             }
             catch (Exception e)
             {
-                error = "装备失败：" + e.Message;
+                error = Loc.Pick("装备失败：" + e.Message, "failed to equip it: " + e.Message);
                 return false;
             }
 
@@ -419,19 +438,19 @@ namespace Stellaris.AI
 
             if (def.apparel == null || !typeof(Apparel).IsAssignableFrom(def.thingClass))
             {
-                error = def.defName + " 不是可穿的衣物";
+                error = Loc.Pick(def.defName + " 不是可穿的衣物", def.defName + " is not wearable apparel");
                 return false;
             }
 
             if (pawn.apparel == null)
             {
-                error = "目标没有衣物系统（可能不是人形角色）";
+                error = Loc.Pick("目标没有衣物系统（可能不是人形角色）", "the target has no apparel system (it may not be a humanlike)");
                 return false;
             }
 
             if (!ApparelUtility.HasPartsToWear(pawn, def))
             {
-                error = pawn.LabelShort + " 没有可穿戴 " + def.defName + " 的身体部位";
+                error = Loc.Pick(pawn.LabelShort + " 没有可穿戴 " + def.defName + " 的身体部位", pawn.LabelShort + " has no body parts that can wear " + def.defName);
                 return false;
             }
 
@@ -444,13 +463,13 @@ namespace Stellaris.AI
 
             if (!def.IsWeapon)
             {
-                error = def.defName + " 不是武器";
+                error = Loc.Pick(def.defName + " 不是武器", def.defName + " is not a weapon");
                 return false;
             }
 
             if (pawn.equipment == null)
             {
-                error = "目标没有装备系统（可能不是人形角色）";
+                error = Loc.Pick("目标没有装备系统（可能不是人形角色）", "the target has no equipment system (it may not be a humanlike)");
                 return false;
             }
 
@@ -469,7 +488,9 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.NonPlayerOnly;
 
         public string Describe() =>
-            "pawn.set_skill{who=handle:p1 | colonist:名字, skillDef=技能 DefName, level=0~20} —— 改该角色的技能等级；能否指向你的殖民者由设置决定";
+            Loc.Pick(
+                "pawn.set_skill{who=handle:p1 | colonist:名字, skillDef=技能 DefName, level=0~20} —— 改该角色的技能等级；能否指向你的殖民者由设置决定",
+                "pawn.set_skill{who=handle:p1 | colonist:name, skillDef=skill DefName, level=0~20} — set that pawn's skill level; whether you may target your own colonists depends on the settings");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -477,26 +498,26 @@ namespace Stellaris.AI
             if (!PawnHurtHandler.TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
 
             string name = a.ArgString("skillDef");
-            if (name.Length == 0) { error = "缺少 skillDef"; return false; }
+            if (name.Length == 0) { error = Loc.Pick("缺少 skillDef", "missing skillDef"); return false; }
 
             SkillDef def = DefDatabase<SkillDef>.GetNamedSilentFail(name);
-            if (def == null) { error = "不存在的 SkillDef：" + name; return false; }
+            if (def == null) { error = Loc.Pick("不存在的 SkillDef：" + name, "unknown SkillDef: " + name); return false; }
 
             int level = a.ArgInt("level", 8);
-            if (level < 0 || level > 20) { error = "level 必须在 0..20"; return false; }
+            if (level < 0 || level > 20) { error = Loc.Pick("level 必须在 0..20", "level must be within 0..20"); return false; }
 
             if (pawn != null)
             {
                 if (pawn.skills == null)
                 {
-                    error = "目标没有技能系统（可能不是人形角色）";
+                    error = Loc.Pick("目标没有技能系统（可能不是人形角色）", "the target has no skills system (it may not be a humanlike)");
                     return false;
                 }
 
                 SkillRecord record = pawn.skills.GetSkill(def);
                 if (record == null || record.TotallyDisabled)
                 {
-                    error = "目标没有可用的 " + name + " 技能";
+                    error = Loc.Pick("目标没有可用的 " + name + " 技能", "the target has no usable " + name + " skill");
                     return false;
                 }
             }
@@ -510,10 +531,10 @@ namespace Stellaris.AI
             if (!PawnHurtHandler.TryPawn(a, ctx, Policy, out Pawn pawn, out error)) return false;
 
             SkillDef def = DefDatabase<SkillDef>.GetNamedSilentFail(a.ArgString("skillDef"));
-            if (def == null || pawn.skills == null) { error = "技能定义或目标技能系统不可用"; return false; }
+            if (def == null || pawn.skills == null) { error = Loc.Pick("技能定义或目标技能系统不可用", "the skill def or the target's skills system is unavailable"); return false; }
 
             SkillRecord record = pawn.skills.GetSkill(def);
-            if (record == null || record.TotallyDisabled) { error = "目标没有该技能"; return false; }
+            if (record == null || record.TotallyDisabled) { error = Loc.Pick("目标没有该技能", "the target does not have that skill"); return false; }
 
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
             record.Level = Math.Max(0, Math.Min(20, a.ArgInt("level", 8)));
@@ -532,7 +553,9 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.NonPlayerOnly;
 
         public string Describe() =>
-            "pawn.join{who=handle:p1 | colonist:名字} —— 让该角色加入玩家派系（重大后果，计入角色编辑预算）";
+            Loc.Pick(
+                "pawn.join{who=handle:p1 | colonist:名字} —— 让该角色加入玩家派系（重大后果，计入角色编辑预算）",
+                "pawn.join{who=handle:p1 | colonist:name} — make that pawn join the player faction (a major consequence; counts against the pawn-edit budget)");
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -541,7 +564,7 @@ namespace Stellaris.AI
 
             if (pawn != null && pawn.Faction == Faction.OfPlayer)
             {
-                error = "该角色已经属于玩家派系";
+                error = Loc.Pick("该角色已经属于玩家派系", "that pawn already belongs to the player faction");
                 return false;
             }
 
@@ -556,7 +579,7 @@ namespace Stellaris.AI
             if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.PawnEdit, 1, out error)) return false;
 
             pawn.SetFaction(Faction.OfPlayer);
-            if (pawn.Faction != Faction.OfPlayer) { error = "加入派系失败"; return false; }
+            if (pawn.Faction != Faction.OfPlayer) { error = Loc.Pick("加入派系失败", "failed to join the faction"); return false; }
             return true;
         }
     }
@@ -622,7 +645,7 @@ namespace Stellaris.AI
             List<BodyPartRecord> parts = Available(pawn);
             if (parts.Count == 0)
             {
-                error = "目标没有可选的身体部位";
+                error = Loc.Pick("目标没有可选的身体部位", "the target has no usable body part");
                 return false;
             }
 
@@ -659,8 +682,10 @@ namespace Stellaris.AI
                 return true;
             }
 
-            error = "找不到身体部位 \"" + token + "\"；可用：" + ListNames(parts)
-                    + "。也可以不写 part，由游戏自动挑一个。";
+            error = Loc.Pick("找不到身体部位 \"" + token + "\"；可用：" + ListNames(parts)
+                    + "。也可以不写 part，由游戏自动挑一个。",
+                    "body part \"" + token + "\" not found; available: " + ListNames(parts)
+                    + ". You can also omit part and let the game pick one.");
             return false;
         }
 
@@ -734,7 +759,7 @@ namespace Stellaris.AI
                 if (!names.Contains(name)) names.Add(name);
             }
 
-            return string.Join("、", names.ToArray());
+            return string.Join(Loc.Pick("、", ", "), names.ToArray());
         }
     }
 }

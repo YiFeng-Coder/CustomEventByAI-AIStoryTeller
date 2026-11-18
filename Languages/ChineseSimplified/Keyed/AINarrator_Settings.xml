@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- ═══════════ 公共 ═══════════ -->
+  <AI_Name>AI 叙述者</AI_Name>
+  <AI_Common_Unlimited>不限制</AI_Common_Unlimited>
+  <AI_Common_NotSet>(未填)</AI_Common_NotSet>
+  <AI_Common_AtLeast>≥{0}</AI_Common_AtLeast>
+  <AI_Common_Range>{0}~{1}</AI_Common_Range>
+  <AI_Common_RangeParen>（{0}）</AI_Common_RangeParen>
+  <AI_Common_HintSep> · {0}</AI_Common_HintSep>
+  <AI_Common_LabelValue>{0}：{1}</AI_Common_LabelValue>
+  <AI_Common_Yes>是</AI_Common_Yes>
+  <AI_Common_No>否</AI_Common_No>
+  <AI_Common_Close>关闭</AI_Common_Close>
+
+  <AI_Unit_Days>天</AI_Unit_Days>
+  <AI_Unit_Times>次</AI_Unit_Times>
+  <AI_Unit_Rounds>轮</AI_Unit_Rounds>
+  <AI_Unit_Events>个</AI_Unit_Events>
+  <AI_Unit_Minutes>分钟</AI_Unit_Minutes>
+
+  <!-- ═══════════ 设置页 ═══════════ -->
+  <AI_Settings_Title>AI 叙述者</AI_Settings_Title>
+  <AI_Settings_ResetDefaults>恢复默认参数</AI_Settings_ResetDefaults>
+  <AI_Settings_OpenDebug>调试窗口</AI_Settings_OpenDebug>
+  <AI_Settings_Save>保存设置</AI_Settings_Save>
+  <AI_Settings_Saved>AI 叙述者设置已保存</AI_Settings_Saved>
+
+  <!-- 服务商 -->
+  <AI_Settings_SectionProvider>—— 模型服务商 ——</AI_Settings_SectionProvider>
+  <AI_Settings_ProviderButton>服务商：{0}　（点击选择）</AI_Settings_ProviderButton>
+  <AI_Settings_ModelButton>模型：{0}　（点击从常用列表选择）</AI_Settings_ModelButton>
+  <AI_Settings_ModelButtonNoPresets>模型：{0}　（该服务商没有预置列表，请手填）</AI_Settings_ModelButtonNoPresets>
+  <AI_Settings_ModelLabel>模型名（可直接手改，用于填上面列表里没有的模型）</AI_Settings_ModelLabel>
+  <AI_Settings_EndpointLabel>接口地址（OpenAI 兼容的完整 URL）</AI_Settings_EndpointLabel>
+  <AI_Settings_KeyLabel>API Key（只存本机 Mod 设置，不写进存档）</AI_Settings_KeyLabel>
+  <AI_Settings_KeyLabelLocal>API Key（本地服务可留空）</AI_Settings_KeyLabelLocal>
+  <AI_Settings_Temperature>温度：{0}　（越低越稳，越高越野）</AI_Settings_Temperature>
+  <AI_Settings_DirectorTimeout>导演调用超时：{0} 分钟</AI_Settings_DirectorTimeout>
+  <AI_Settings_WriterTimeout>编剧调用超时：{0} 分钟</AI_Settings_WriterTimeout>
+  <AI_Settings_MaxOutputTokens>最大输出 token</AI_Settings_MaxOutputTokens>
+
+  <!-- 节奏 -->
+  <AI_Settings_SectionRhythm>—— 叙事节奏 ——</AI_Settings_SectionRhythm>
+  <AI_Settings_AutoTrigger>启用自动触发</AI_Settings_AutoTrigger>
+  <AI_Settings_AutoTriggerDesc>关闭后叙述者只响应调试窗里的「立即请求一次」。</AI_Settings_AutoTriggerDesc>
+  <AI_Settings_Mtb>平均事件间隔：{0} 天</AI_Settings_Mtb>
+  <AI_Settings_MinInterval>两次调用最小间隔</AI_Settings_MinInterval>
+  <AI_Settings_DailyCalls>每日调用上限</AI_Settings_DailyCalls>
+  <AI_Settings_LuaEvents>启用 Lua 剧情事件</AI_Settings_LuaEvents>
+  <AI_Settings_LuaEventsDesc>关闭后 AI 不再现场写原创剧情，只能选原版事件或休整：调用更省、行为更可预测。已经开始的事件会正常跑完，不会卡在半个阶段。</AI_Settings_LuaEventsDesc>
+  <AI_Settings_LuaDaily>每日 Lua 剧情上限</AI_Settings_LuaDaily>
+  <AI_Settings_ScriptRetries>Lua 脚本被拒后重写轮数</AI_Settings_ScriptRetries>
+  <AI_Settings_ScriptRetriesHint>0 = 被拒即放弃；1 = 默认；每轮多一次编剧调用</AI_Settings_ScriptRetriesHint>
+
+  <!-- 原版事件文本 -->
+  <AI_Settings_SectionIncidentText>—— 原版事件文本 ——</AI_Settings_SectionIncidentText>
+  <AI_Settings_AiAnnounce>原版事件使用 AI 描述</AI_Settings_AiAnnounce>
+  <AI_Settings_AiAnnounceDesc>开启后，AI 触发的原版事件会用模型返回的 announce 那句话替换事件信件的正文；事件本身、信件标题与交互都不变。关闭则完全显示原版信件文字。该开关只影响 AI 批准并触发的原版事件，不影响游戏自己触发的事件。</AI_Settings_AiAnnounceDesc>
+
+  <!-- 配额 -->
+  <AI_Settings_SectionQuota>—— 事件配额（滑到最右 = 不限制）——</AI_Settings_SectionQuota>
+  <AI_Settings_QuotaWindow>统计窗口（最近 N 个事件）</AI_Settings_QuotaWindow>
+  <AI_Settings_ThreatBig>ThreatBig 上限</AI_Settings_ThreatBig>
+  <AI_Settings_ThreatSmall>ThreatSmall 上限</AI_Settings_ThreatSmall>
+  <AI_Settings_Misc>Misc 上限</AI_Settings_Misc>
+  <AI_Settings_ConsecutiveThreat>连续威胁上限</AI_Settings_ConsecutiveThreat>
+  <AI_Settings_RepeatWindow>同一事件冷却</AI_Settings_RepeatWindow>
+
+  <!-- 提示词 -->
+  <AI_Settings_SectionPrompt>—— 叙事风格提示词 ——</AI_Settings_SectionPrompt>
+  <AI_Settings_ExtraPrompt>附加指令（追加在系统提示词后面，用来改剧本风格；留空则不加）</AI_Settings_ExtraPrompt>
+  <AI_Settings_LongEvents>允许长线事件（多阶段 / 跨天定时器）</AI_Settings_LongEvents>
+  <AI_Settings_LongEventsDesc>关闭时只生成当场结束的短线事件。建议保持关闭：AI 写的长线事件经常前后不连贯、伏笔收不回来，玩家体验往往很差；短线事件（一封信、一次抉择、一个后果）反而更稳。需要长线时再打开。</AI_Settings_LongEventsDesc>
+  <AI_Settings_OverridePrompt>完全覆盖默认系统提示词（进阶）</AI_Settings_OverridePrompt>
+  <AI_Settings_OverridePromptDesc>勾选后启用下面这段替换内置人设；JSON 输出格式仍会被强制追加，保证可解析。</AI_Settings_OverridePromptDesc>
+  <AI_Settings_OverrideOn>（已启用：上面这段会替换内置人设）</AI_Settings_OverrideOn>
+  <AI_Settings_OverrideOff>（未启用：上面这段不会生效）</AI_Settings_OverrideOff>
+
+  <!-- DefName 查询 -->
+  <AI_Settings_SectionLookup>—— DefName 查询（多模组友好）——</AI_Settings_SectionLookup>
+  <AI_Settings_DefLookup>允许 AI 按需查询 DefName</AI_Settings_DefLookup>
+  <AI_Settings_DefLookupDesc>推荐开启：不再把每类 Def 的静态名单塞进提示词，模型需要时用 LOOKUP 查，或直接写 @item/药 让游戏解析。关闭后只剩目录示例与精确名字。</AI_Settings_DefLookupDesc>
+  <AI_Settings_LookupRounds>每次请求最多查询轮数</AI_Settings_LookupRounds>
+  <AI_Settings_LookupRoundsHint>0 = 关闭查询轮，不设上限</AI_Settings_LookupRoundsHint>
+  <AI_Settings_LookupResults>单次查询返回条数</AI_Settings_LookupResults>
+  <AI_Settings_LookupResultsHint>不设上限；太大可能超出模型上下文</AI_Settings_LookupResultsHint>
+  <AI_Settings_LegacyDefs>回退：使用旧版全量 Def 名单</AI_Settings_LegacyDefs>
+  <AI_Settings_LegacyDefsDesc>仅用于对比/应急。旧版按加载顺序截断，多模组下会重新出现「后装模组的 Def 永远看不到」的偏差。</AI_Settings_LegacyDefsDesc>
+  <AI_Settings_StrictPlaceholders>严格占位符模式（调试）</AI_Settings_StrictPlaceholders>
+  <AI_Settings_StrictPlaceholdersDesc>默认关闭：@类别/关键词 解析不唯一时自动取最匹配的第一个。开启后改为报出候选并拒绝，方便观察解析行为。</AI_Settings_StrictPlaceholdersDesc>
+
+  <!-- 动作库 -->
+  <AI_Settings_SectionActions>—— 动作库（AI 能用的叙事手段）——</AI_Settings_SectionActions>
+  <AI_Settings_Influence>AI 对你的殖民者的影响：{0}</AI_Settings_Influence>
+  <AI_Settings_InfluenceButton>   点击切换：不允许 / 仅心理层 / 全部（含伤害与死亡）</AI_Settings_InfluenceButton>
+  <AI_Settings_InfluenceNeverOption>不允许：角色动作只影响 AI 自己生成的角色</AI_Settings_InfluenceNeverOption>
+  <AI_Settings_InfluencePsychologyOption>仅心理层：想法 / 心情 / 关系 / 特质 / 技能</AI_Settings_InfluencePsychologyOption>
+  <AI_Settings_InfluenceEverythingOption>全部：额外允许伤害 / 击杀 / 精神崩溃</AI_Settings_InfluenceEverythingOption>
+  <AI_Settings_InfluenceHintAll>（危险动作也受每次事件 3 次的危险预算限制；校验失败会整段回滚）</AI_Settings_InfluenceHintAll>
+  <AI_Settings_InfluenceHintLimited>（危险动作当前不能指向你的殖民者）</AI_Settings_InfluenceHintLimited>
+  <AI_Influence_Never>不允许</AI_Influence_Never>
+  <AI_Influence_Psychology>仅心理层</AI_Influence_Psychology>
+  <AI_Influence_Everything>全部</AI_Influence_Everything>
+  <AI_Settings_SocialActions>心理与关系（想法 / 心情 / 灵感 / 特质 / 关系 / 崩溃）</AI_Settings_SocialActions>
+  <AI_Settings_SocialActionsDesc>让角色对事件产生情绪与关系变化。关闭后 AI 只能描写，不能改变任何人的心理状态。</AI_Settings_SocialActionsDesc>
+  <AI_Settings_SceneActions>场景与破坏（建筑 / 地形 / 屋顶 / 污渍 / 动物 / 清除 / 塌方）</AI_Settings_SceneActions>
+  <AI_Settings_SceneActionsDesc>让事件现场留下可见的痕迹。关闭后剧情不能执行这一组场景动作。</AI_Settings_SceneActionsDesc>
+  <AI_Settings_InteractiveActions>交互与呈现（叙事目标 / 镜头 / 信件抉择）</AI_Settings_InteractiveActions>
+  <AI_Settings_InteractiveActionsDesc>关闭后剧情不能创建叙事目标、移动镜头或使用信件栏抉择。</AI_Settings_InteractiveActionsDesc>
+
+  <!-- 状态 -->
+  <AI_Settings_SectionStatus>—— 状态 ——</AI_Settings_SectionStatus>
+  <AI_Settings_DebugLog>调试日志</AI_Settings_DebugLog>
+  <AI_Settings_DebugLogDesc>把每次决策要点写进 Player.log。</AI_Settings_DebugLogDesc>
+  <AI_Settings_CandidateCount>候选事件：{0} 个</AI_Settings_CandidateCount>
+  <AI_Settings_Configured>配置：{0}</AI_Settings_Configured>
+  <AI_Settings_ConfiguredYes>已完整</AI_Settings_ConfiguredYes>
+  <AI_Settings_ConfiguredNo>不完整（叙述者会保持静默）</AI_Settings_ConfiguredNo>
+  <AI_Settings_CurrentProvider>当前服务商：{0}　·　模型：{1}</AI_Settings_CurrentProvider>
+  <AI_Settings_FooterHint>操作按钮在窗口底部的固定栏里，不用滚到底找。</AI_Settings_FooterHint>
+
+</LanguageData>

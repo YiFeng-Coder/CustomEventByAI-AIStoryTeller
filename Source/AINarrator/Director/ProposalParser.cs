@@ -95,7 +95,7 @@ namespace Stellaris.AI
             if (decision == "no_event" || decision == "rest" || decision == "none")
             {
                 p.Kind = ProposalKind.Rest;
-                if (p.Reason.Length == 0) p.Reason = "(模型未给出理由)";
+                if (p.Reason.Length == 0) p.Reason = Loc.Pick("(模型未给出理由)", "(the model gave no reason)");
                 return p;
             }
 
@@ -106,7 +106,7 @@ namespace Stellaris.AI
                 if (p.Lookup == null)
                 {
                     p.Kind = ProposalKind.Invalid;
-                    p.Error = lookupError ?? "lookup 查询缺少 kind";
+                    p.Error = lookupError ?? Loc.Pick("lookup 查询缺少 kind", "the lookup query is missing kind");
                 }
 
                 return p;
@@ -118,11 +118,11 @@ namespace Stellaris.AI
                 p.Title = Truncate(GetString(root, "title"), 40);
                 p.Concept = Truncate(GetString(root, "concept"), 600);
                 if (p.Concept.Length == 0) p.Concept = p.Reason;
-                if (p.Title.Length == 0) p.Title = "未命名剧情";
+                if (p.Title.Length == 0) p.Title = Loc.Pick("未命名剧情", "Untitled story");
                 if (p.Concept.Length == 0)
                 {
                     p.Kind = ProposalKind.Invalid;
-                    p.Error = "lua_event 缺少 concept";
+                    p.Error = Loc.Pick("lua_event 缺少 concept", "lua_event is missing concept");
                 }
 
                 return p;
@@ -176,7 +176,7 @@ namespace Stellaris.AI
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                error = "空回复";
+                error = Loc.Pick("空回复", "Empty response");
                 return false;
             }
 
@@ -208,7 +208,8 @@ namespace Stellaris.AI
                 return ValidateScript(lua, ref title, ref error);
             }
 
-            error = jsonError ?? "回复里既没有 ```lua 代码块，也没有可解析的 JSON";
+            error = jsonError ?? Loc.Pick("回复里既没有 ```lua 代码块，也没有可解析的 JSON",
+                "the response has neither a ```lua code block nor parseable JSON");
             return false;
         }
 
@@ -216,23 +217,24 @@ namespace Stellaris.AI
         {
             if (string.IsNullOrWhiteSpace(script))
             {
-                error = "脚本为空";
+                error = Loc.Pick("脚本为空", "The script is empty");
                 return false;
             }
 
             if (!script.Contains("function"))
             {
-                error = "提取到的内容不像 Lua 脚本（没有 function）";
+                error = Loc.Pick("提取到的内容不像 Lua 脚本（没有 function）",
+                    "The extracted content does not look like a Lua script (no function)");
                 return false;
             }
 
             if (script.Length > 64 * 1024)
             {
-                error = "脚本超过 64KB";
+                error = Loc.Pick("脚本超过 64KB", "The script is larger than 64KB");
                 return false;
             }
 
-            if (string.IsNullOrEmpty(title)) title = "未命名剧情";
+            if (string.IsNullOrEmpty(title)) title = Loc.Pick("未命名剧情", "Untitled story");
             return true;
         }
 
@@ -316,7 +318,7 @@ namespace Stellaris.AI
             string json = JsonRepairer.ExtractJsonObject(text);
             if (string.IsNullOrEmpty(json))
             {
-                error = "回复里没有 JSON 对象";
+                error = Loc.Pick("回复里没有 JSON 对象", "The response contains no JSON object");
                 return false;
             }
 
@@ -331,7 +333,7 @@ namespace Stellaris.AI
                 JsonElement root = doc.RootElement;
                 if (root.ValueKind != JsonValueKind.Object)
                 {
-                    error = "JSON 根不是对象";
+                    error = Loc.Pick("JSON 根不是对象", "The JSON root is not an object");
                     return false;
                 }
 
@@ -342,7 +344,8 @@ namespace Stellaris.AI
 
                 if (lua.Length == 0)
                 {
-                    error = "JSON 里缺少 lua 字段（实际字段：" + ListKeys(root) + "）";
+                    error = Loc.Pick("JSON 里缺少 lua 字段（实际字段：" + ListKeys(root) + "）",
+                        "The JSON has no lua field (actual fields: " + ListKeys(root) + ")");
                     return false;
                 }
 
@@ -350,7 +353,8 @@ namespace Stellaris.AI
             }
             catch (JsonException e)
             {
-                error = "JSON 解析失败：" + e.Message;
+                error = Loc.Pick("JSON 解析失败：" + e.Message,
+                    "Failed to parse the JSON: " + e.Message);
                 return false;
             }
         }
@@ -490,7 +494,7 @@ namespace Stellaris.AI
                 }
             }
 
-            return sb.Length == 0 ? "(空对象)" : sb.ToString();
+            return sb.Length == 0 ? Loc.Pick("(空对象)", "(empty object)") : sb.ToString();
         }
 
         private static string GetString(JsonElement root, string name)        {

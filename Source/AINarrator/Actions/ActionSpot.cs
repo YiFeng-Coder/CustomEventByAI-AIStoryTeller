@@ -20,6 +20,9 @@ namespace Stellaris.AI
         public const string AnchorsHelp =
             "center / storage / water / ore / edge_north / edge_south / edge_east / edge_west / random / handle:<名字>";
 
+        private const string AnchorsHelpEn =
+            "center / storage / water / ore / edge_north / edge_south / edge_east / edge_west / random / handle:<name>";
+
         public static bool TryResolve(PlannedAction action, ActionContext context, out IntVec3 cell, out string error)
         {
             cell = IntVec3.Invalid;
@@ -28,7 +31,7 @@ namespace Stellaris.AI
             Map map = context != null ? context.Map : null;
             if (map == null)
             {
-                error = "没有可用地图";
+                error = Loc.Pick("没有可用地图", "No map is available");
                 return false;
             }
 
@@ -47,7 +50,9 @@ namespace Stellaris.AI
 
                 if (spot.Length == 0)
                 {
-                    error = "缺少位置：写 spot=\"" + AnchorsHelp.Split(' ')[0] + "\" 之类，或 cell={x,y,z}";
+                    error = Loc.Pick("缺少位置：写 spot=\"" + AnchorsHelp.Split(' ')[0] + "\" 之类，或 cell={x,y,z}",
+                        "Missing position: write something like spot=\"" + AnchorsHelpEn.Split(' ')[0]
+                        + "\", or use cell={x,y,z}");
                     return false;
                 }
 
@@ -59,8 +64,10 @@ namespace Stellaris.AI
 
             if (!cell.InBounds(map))
             {
-                error = "位置在地图之外（地图 " + map.Size.x + "×" + map.Size.z + "，你给的是 "
-                        + cell.x + "," + cell.z + "）";
+                error = Loc.Pick("位置在地图之外（地图 " + map.Size.x + "×" + map.Size.z + "，你给的是 "
+                                 + cell.x + "," + cell.z + "）",
+                    "Position is outside the map (the map is " + map.Size.x + "×" + map.Size.z
+                    + ", but you gave " + cell.x + "," + cell.z + ")");
                 return false;
             }
 
@@ -107,7 +114,7 @@ namespace Stellaris.AI
                 string name = spot.Substring("handle:".Length).Trim();
                 if (!HandleRegistry.TryResolveReference(context, name, false, out Thing thing, out error))
                 {
-                    error = "锚点 " + spot + "：" + error;
+                    error = Loc.Pick("锚点 " + spot + "：" + error, "anchor " + spot + ": " + error);
                     return false;
                 }
 
@@ -119,7 +126,8 @@ namespace Stellaris.AI
 
                 if (!thing.Spawned)
                 {
-                    error = "锚点 " + spot + "：该对象不在任何地图上";
+                    error = Loc.Pick("锚点 " + spot + "：该对象不在任何地图上",
+                        "anchor " + spot + ": that object is not on any map");
                     return false;
                 }
 
@@ -147,7 +155,7 @@ namespace Stellaris.AI
                     return TryStockpile(map, out cell, out error);
 
                 case "water":
-                    return TryTerrainFlag(map, t => t.IsWater, "水", out cell, out error);
+                    return TryTerrainFlag(map, t => t.IsWater, "水", "water", out cell, out error);
 
                 case "ore":
                     return TryMineable(map, out cell, out error);
@@ -162,7 +170,8 @@ namespace Stellaris.AI
                     return TryEdge(map, new IntVec3(1, 0, map.Size.z / 2), out cell);
             }
 
-            error = "未知的位置锚点 \"" + spot + "\"；可用：" + AnchorsHelp;
+            error = Loc.Pick("未知的位置锚点 \"" + spot + "\"；可用：" + AnchorsHelp,
+                "Unknown position anchor \"" + spot + "\"; available: " + AnchorsHelpEn);
             return false;
         }
 
@@ -196,7 +205,9 @@ namespace Stellaris.AI
 
             if (cells.Count == 0)
             {
-                error = "地图上还没有仓储区，锚点 storage 不可用；改用 center 或 cell";
+                error = Loc.Pick("地图上还没有仓储区，锚点 storage 不可用；改用 center 或 cell",
+                    "There is no stockpile on this map, so the storage anchor is unavailable; "
+                    + "use center or cell instead");
                 return false;
             }
 
@@ -205,7 +216,7 @@ namespace Stellaris.AI
         }
 
         private static bool TryTerrainFlag(Map map, Func<TerrainDef, bool> predicate,
-            string label, out IntVec3 cell, out string error)
+            string labelZh, string labelEn, out IntVec3 cell, out string error)
         {
             cell = IntVec3.Invalid;
             error = null;
@@ -222,7 +233,9 @@ namespace Stellaris.AI
                 }
             }
 
-            error = "地图中心 " + radius + " 格内找不到" + label + "；改用 center 或 cell";
+            error = Loc.Pick("地图中心 " + radius + " 格内找不到" + labelZh + "；改用 center 或 cell",
+                "No " + labelEn + " found within " + radius + " cells of the map center; "
+                + "use center or cell instead");
             return false;
         }
 
@@ -242,7 +255,9 @@ namespace Stellaris.AI
 
             if (found.Count == 0)
             {
-                error = "地图上没有可开采的矿，锚点 ore 不可用；改用 center 或 cell";
+                error = Loc.Pick("地图上没有可开采的矿，锚点 ore 不可用；改用 center 或 cell",
+                    "There is no mineable ore on this map, so the ore anchor is unavailable; "
+                    + "use center or cell instead");
                 return false;
             }
 
