@@ -94,8 +94,11 @@ namespace Stellaris.AI
         /// <summary>只允许指向非玩家派系的角色（特质、关系、改技能、加入）。</summary>
         NonPlayerOnly = 2,
 
-        /// <summary>只允许指向本事件自己生成的句柄（危险动作：伤害、击杀、崩溃）。</summary>
-        HandleOnly = 3
+        /// <summary>
+        /// 危险动作（伤害 / 击杀 / 崩溃）。
+        /// 默认只允许句柄；玩家把「AI 对你的殖民者的影响」设为「全部」后，也可以指向殖民者。
+        /// </summary>
+        Dangerous = 3
     }
 
     public interface IGameActionHandler

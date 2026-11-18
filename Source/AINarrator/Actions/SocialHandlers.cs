@@ -174,7 +174,7 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.NonPlayerOnly;
 
         public string Describe() =>
-            "pawn.trait{who=handle:p1, traitDef=特质 DefName, remove=可选 true} —— 给 AI 生成的角色加/去特质";
+            "pawn.trait{who=handle:p1 | colonist:名字, traitDef=特质 DefName, remove=可选 true} —— 给角色加/去特质；能否指向你的殖民者由设置决定";
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -231,7 +231,7 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.NonPlayerOnly;
 
         public string Describe() =>
-            "pawn.relation{who=handle:p1, other=handle:p2|colonist:名字, relationDef=关系 DefName, both=可选 默认 true} " +
+            "pawn.relation{who=handle:p1 | colonist:名字, other=handle:p2|colonist:名字, relationDef=关系 DefName, both=可选 默认 true} " +
             "—— 在两个角色之间建立关系";
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
@@ -242,7 +242,8 @@ namespace Stellaris.AI
             string otherToken = a.ArgString("other");
             if (otherToken.Length == 0) { error = "缺少 other（第二个角色）"; return false; }
 
-            if (!WhoResolver.TryResolveToken(ctx, otherToken, TargetPolicy.Positive, true, out Pawn other, out error))
+            // other 走同一个 TargetPolicy：另一端如果是你的殖民者，同样要过"影响范围"设置。
+            if (!WhoResolver.TryResolveToken(ctx, otherToken, TargetPolicy.NonPlayerOnly, true, out _, out error))
             {
                 return false;
             }
@@ -255,14 +256,6 @@ namespace Stellaris.AI
                 return false;
             }
 
-            // 关系会改写"另一个角色"的社交栏：如果另一端是你的殖民者，同样要过设置开关。
-            if (other != null && (other.IsColonist || other.Faction == Faction.OfPlayer) &&
-                (AINarratorMod.Settings == null || !AINarratorMod.Settings.affectPlayerColonistsSocial))
-            {
-                error = "玩家关闭了「让心理层影响殖民者」，不能给你的殖民者添加关系";
-                return false;
-            }
-
             return ActionBudget.TryPlan(ctx, ActionBudget.Pool.Social, 1, out error);
         }
 
@@ -270,7 +263,7 @@ namespace Stellaris.AI
         {
             error = null;
             if (!WhoResolver.TryResolve(a, ctx, Policy, true, out Pawn pawn, out error)) return false;
-            if (!WhoResolver.TryResolveToken(ctx, a.ArgString("other"), TargetPolicy.Positive, true,
+            if (!WhoResolver.TryResolveToken(ctx, a.ArgString("other"), TargetPolicy.NonPlayerOnly, true,
                     out Pawn other, out error)) return false;
 
             PawnRelationDef def = DefDatabase<PawnRelationDef>.GetNamedSilentFail(a.ArgString("relationDef"));
@@ -288,17 +281,17 @@ namespace Stellaris.AI
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // pawn.mental —— 精神崩溃（只对 AI 生成的角色，计入危险预算）
+    // pawn.mental —— 精神崩溃（危险预算；能否指向你的殖民者由设置决定）
     // ─────────────────────────────────────────────────────────────────────────
     public sealed class PawnMentalHandler : IGameActionHandler
     {
         public string OpType => "pawn.mental";
         public ActionPermission Permission => ActionPermission.Major;
         public ActionCategory Category => ActionCategory.Social;
-        public TargetPolicy Policy => TargetPolicy.HandleOnly;
+        public TargetPolicy Policy => TargetPolicy.Dangerous;
 
         public string Describe() =>
-            "pawn.mental{who=handle:p1, mentalStateDef=精神状态的 DefName} —— 让该角色进入精神崩溃（危险预算）";
+            "pawn.mental{who=handle:p1 | colonist:名字, mentalStateDef=精神状态的 DefName} —— 让该角色进入精神崩溃（危险预算）；能否指向你的殖民者由设置决定";
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {

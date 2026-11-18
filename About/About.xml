@@ -3,7 +3,7 @@
   <name>AI Narrator</name>
   <author>Feng</author>
   <packageId>Feng.AINarrator</packageId>
-  <modVersion>0.6.0</modVersion>
+  <modVersion>0.6.4</modVersion>
   <supportedVersions>
     <li>1.7</li>
   </supportedVersions>

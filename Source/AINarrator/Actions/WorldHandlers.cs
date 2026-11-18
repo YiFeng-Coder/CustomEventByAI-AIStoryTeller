@@ -92,7 +92,7 @@ namespace Stellaris.AI
 
             ResearchProjectDef def = DefDatabase<ResearchProjectDef>.GetNamedSilentFail(name);
             if (def == null) { error = "不存在的 ResearchProjectDef：" + name; return false; }
-            if (!def.CanStartNow && def.IsFinished)
+            if (def.IsFinished)
             {
                 error = "该研究已经完成";
                 return false;

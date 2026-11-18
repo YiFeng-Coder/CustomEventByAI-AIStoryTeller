@@ -24,6 +24,7 @@ namespace Stellaris.AI
         // 数字输入框的编辑缓冲：不能每帧用 ToString() 覆盖，否则玩家永远输不进第二位。
         private static string _maxLookupRoundsText;
         private static string _lookupMaxResultsText;
+        private static string _maxScriptRetriesText;
 
         public AINarratorMod(ModContentPack content) : base(content)
         {
@@ -88,9 +89,9 @@ namespace Stellaris.AI
             DrawRhythmSection(listing);
             DrawIncidentTextSection(listing);
             DrawQuotaSection(listing);
+            DrawActionSection(listing);
             DrawPromptSection(listing);
             DrawDefLookupSection(listing);
-            DrawActionSection(listing);
             DrawDebugSection(listing);
 
             listing.End();
@@ -150,6 +151,7 @@ namespace Stellaris.AI
             Settings.enableLuaEvents = true;
             Settings.useAiIncidentAnnounce = true;
             Settings.maxLuaEventsPerDay = 0;
+            Settings.maxScriptRetries = 1;
             Settings.debugLogging = true;
             Settings.maxLogRecords = 200;
             Settings.quotaWindow = 10;
@@ -170,10 +172,11 @@ namespace Stellaris.AI
             Settings.strictDefPlaceholders = false;
             _maxLookupRoundsText = null;
             _lookupMaxResultsText = null;
+            _maxScriptRetriesText = null;
             Settings.enableSocialActions = true;
             Settings.enableSceneActions = true;
             Settings.enableInteractiveActions = true;
-            Settings.affectPlayerColonistsSocial = false;
+            Settings.colonistInfluence = AINarratorSettings.InfluenceEverything;
             Settings.overrideSystemPrompt = false;
             Settings.systemPromptOverride = "";
             Settings.extraPrompt = "";
@@ -298,6 +301,12 @@ namespace Stellaris.AI
             GUI.enabled = prevLuaEnabled && Settings.enableLuaEvents;
             Settings.maxLuaEventsPerDay = DrawUnlimitedSlider(
                 listing, "每日 Lua 剧情上限", Settings.maxLuaEventsPerDay, 1, 20, 1, "次");
+
+            // 剧本被拒后的重写轮数：这是"多花几次编剧调用换成功率"的旋钮，
+            // 和每日上限一样，只在 Lua 剧情开启时有意义。
+            Settings.maxScriptRetries = DrawIntField(listing, "Lua 脚本被拒后重写轮数",
+                Settings.maxScriptRetries, ref _maxScriptRetriesText, 0, 10, "轮",
+                "0 = 被拒即放弃；1 = 默认；每轮多一次编剧调用");
             GUI.enabled = prevLuaEnabled;
 
         }
@@ -401,18 +410,12 @@ namespace Stellaris.AI
             listing.Gap(6f);
             listing.Label("—— 动作库（AI 能用的叙事手段）——");
 
+            // 先放"能对我的殖民者做什么"：这是最容易被误解、也最需要一眼看见的一项。
+            DrawInfluenceRow(listing);
+
             listing.CheckboxLabeled("心理与关系（想法 / 心情 / 灵感 / 特质 / 关系 / 崩溃）",
                 ref Settings.enableSocialActions,
                 "让角色对事件产生情绪与关系变化。关闭后 AI 只能描写，不能改变任何人的心理状态。");
-
-            // 关键开关：默认关闭。P3 的红线是"不碰玩家的人"，现在把它交给玩家自己决定。
-            bool prev = GUI.enabled;
-            GUI.enabled = Settings.enableSocialActions;
-            listing.CheckboxLabeled("允许心理层影响你的殖民者",
-                ref Settings.affectPlayerColonistsSocial,
-                "开启后，AI 可以给你的殖民者加想法、改心情、建立关系（幅度有上限，且计入每次事件的社交预算）。"
-                + "关闭时，心理层只作用于 AI 自己生成的角色。危险动作（伤害/击杀/崩溃）永远不能指向你的殖民者。");
-            GUI.enabled = prev;
 
             listing.CheckboxLabeled("场景与破坏（建筑 / 地形 / 屋顶 / 污渍 / 动物 / 清除 / 塌方）",
                 ref Settings.enableSceneActions,
@@ -421,6 +424,41 @@ namespace Stellaris.AI
             listing.CheckboxLabeled("交互与呈现（叙事目标 / 镜头 / 信件抉择）",
                 ref Settings.enableInteractiveActions,
                 "关闭后剧情不能创建叙事目标、移动镜头或使用信件栏抉择。");
+        }
+
+        /// <summary>
+        /// "AI 能对我的殖民者做什么"——三档选择。
+        /// 用 FloatMenu 而不是滑条：只有 3 个离散值，滑条既难精确点到，也说不清差别。
+        /// </summary>
+        private static void DrawInfluenceRow(Listing_Standard listing)
+        {
+            int current = Settings.colonistInfluence;
+            listing.Label("AI 对你的殖民者的影响：" + AINarratorSettings.InfluenceLabel(current));
+
+            if (listing.ButtonText("   点击切换：不允许 / 仅心理层 / 全部（含伤害与死亡）"))
+            {
+                var options = new List<FloatMenuOption>
+                {
+                    new FloatMenuOption("不允许：角色动作只影响 AI 自己生成的角色", () =>
+                    {
+                        Settings.colonistInfluence = AINarratorSettings.InfluenceNever;
+                    }),
+                    new FloatMenuOption("仅心理层：想法 / 心情 / 关系 / 特质 / 技能", () =>
+                    {
+                        Settings.colonistInfluence = AINarratorSettings.InfluencePsychology;
+                    }),
+                    new FloatMenuOption("全部：额外允许伤害 / 击杀 / 精神崩溃", () =>
+                    {
+                        Settings.colonistInfluence = AINarratorSettings.InfluenceEverything;
+                    })
+                };
+
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+
+            listing.Label(current == AINarratorSettings.InfluenceEverything
+                ? "（危险动作也受每次事件 3 次的危险预算限制；校验失败会整段回滚）"
+                : "（危险动作当前不能指向你的殖民者）");
         }
 
         private static void DrawDebugSection(Listing_Standard listing)

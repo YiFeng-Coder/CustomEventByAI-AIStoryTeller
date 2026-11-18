@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -230,11 +231,16 @@ namespace Stellaris.AI
 
             string name = a.ArgString("thingDef");
             if (name.Length == 0) { error = "缺少 thingDef"; return false; }
-            if (DefDatabase<ThingDef>.GetNamedSilentFail(name) == null)
+
+            ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(name);
+            if (def == null)
             {
                 error = "不存在的 ThingDef：" + name;
                 return false;
             }
+
+            // 需要材质的定义不能直接 MakeThing（与 thing.spawn 同一类问题）。
+            if (!SpawnSafety.CanMakeThing(def, out error)) return false;
 
             int count = a.ArgInt("count", 10);
             if (count < 1 || count > 20) { error = "count 必须在 1..20"; return false; }
@@ -332,13 +338,28 @@ namespace Stellaris.AI
             }
             if (!ActionSpot.TryResolve(a, ctx, out IntVec3 cell, out error)) return false;
 
+            // 水/墙里放不下角色：先挪到最近的可站立格，避免 GenSpawn 抛异常。
+            if (!cell.Standable(ctx.Map))
+            {
+                cell = CellFinder.RandomClosewalkCellNear(cell, ctx.Map, 8);
+            }
+
             if (!ActionBudget.TryConsumeCorpse(ctx, out error)) return false;
 
-            Pawn pawn = PawnGenerator.GeneratePawn(kind, null);
-            PawnKindSafety.RepairGeneratedPawn(pawn);
-            if (GenSpawn.Spawn(pawn, cell, ctx.Map) == null || !pawn.Spawned)
+            Pawn pawn;
+            try
             {
-                error = "未能生成用于制作尸体的角色";
+                pawn = PawnGenerator.GeneratePawn(kind, null);
+                PawnKindSafety.RepairGeneratedPawn(pawn);
+                if (pawn == null || GenSpawn.Spawn(pawn, cell, ctx.Map) == null || !pawn.Spawned)
+                {
+                    error = "未能生成用于制作尸体的角色";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                error = "生成尸体失败：" + e.Message;
                 return false;
             }
 
@@ -395,17 +416,33 @@ namespace Stellaris.AI
             if (def == null || ctx.Map == null) { error = "没有可用地图或定义"; return false; }
             if (!ActionSpot.TryResolve(a, ctx, out IntVec3 cell, out error)) return false;
 
-            if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.Spawn, 1, out error)) return false;
-
-            Thing thing = ThingMaker.MakeThing(def);
-            if (thing is Plant plant)
+            TerrainDef terrain = cell.GetTerrain(ctx.Map);
+            if (terrain == null || terrain.fertility <= 0f || cell.GetEdifice(ctx.Map) != null)
             {
-                plant.Growth = System.Math.Max(0.1f, System.Math.Min(1f, a.ArgFloat("growth", 1f)));
+                error = "该位置不能种植物（地形 " + (terrain != null ? terrain.defName : "?")
+                        + " 肥力为 0，或被建筑占用）";
+                return false;
             }
 
-            if (GenSpawn.Spawn(thing, cell, ctx.Map) == null || !thing.Spawned)
+            if (!ActionBudget.TryConsume(ctx, ActionBudget.Pool.Spawn, 1, out error)) return false;
+
+            try
             {
-                error = "植物生成失败";
+                Thing thing = ThingMaker.MakeThing(def);
+                if (thing is Plant plant)
+                {
+                    plant.Growth = System.Math.Max(0.1f, System.Math.Min(1f, a.ArgFloat("growth", 1f)));
+                }
+
+                if (GenSpawn.Spawn(thing, cell, ctx.Map) == null || !thing.Spawned)
+                {
+                    error = "植物生成失败";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                error = "植物生成失败：" + e.Message;
                 return false;
             }
             return true;

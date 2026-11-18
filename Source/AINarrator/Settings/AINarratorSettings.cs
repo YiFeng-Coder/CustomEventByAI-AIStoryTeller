@@ -34,6 +34,14 @@ namespace Stellaris.AI
         public bool useAiIncidentAnnounce = true;
 
         public int maxLuaEventsPerDay = 0;       // 0 = 不限制
+
+        /// <summary>
+        /// Lua 脚本被拒后允许重写几轮（= 允许被拒几次）。
+        /// 0 = 被拒即放弃；1 = 现有默认（带报错原因重写一次）；上限见 Normalize。
+        /// 每多一轮就多一次编剧调用，会把"被拒 → 修好"的成功率换成 token 与等待时间。
+        /// </summary>
+        public int maxScriptRetries = 1;
+
         public bool debugLogging = true;
         public int maxLogRecords = 200;
 
@@ -75,11 +83,28 @@ namespace Stellaris.AI
         /// <summary>交互与呈现动作组（目标 / 镜头 / 信件抉择）。</summary>
         public bool enableInteractiveActions = true;
 
+        // AI 能对你的殖民者做什么：0 = 不允许，1 = 仅心理层，2 = 全部（含伤害/击杀/崩溃）。
+        // 注意：这是"玩家自己承担的开关"，不是提示词里的建议——校验器按它放行或拒绝。
+        public const int InfluenceNever = 0;
+        public const int InfluencePsychology = 1;
+        public const int InfluenceEverything = 2;
+
         /// <summary>
-        /// 是否允许"心理层"落到玩家自己的殖民者身上（想法 / 心情 / 关系）。
-        /// 默认关闭：P3 的红线是"不碰玩家的人"，这里把它变成一个玩家自己承担的开关。
+        /// AI 对你的殖民者的影响范围。
+        /// 默认"全部"：危险动作也能落到你的殖民者身上（仍受每次事件 3 次的危险预算限制）。
+        /// 想更保守就调成"仅心理层"或"不允许"。
         /// </summary>
-        public bool affectPlayerColonistsSocial = false;
+        public int colonistInfluence = InfluenceEverything;
+
+        public static string InfluenceLabel(int value)
+        {
+            switch (value)
+            {
+                case InfluenceNever: return "不允许";
+                case InfluencePsychology: return "仅心理层";
+                default: return "全部";
+            }
+        }
 
         // ---- 模型接入 ----
         public string providerId = "deepseek";
@@ -128,6 +153,7 @@ namespace Stellaris.AI
             Scribe_Values.Look(ref enableLuaEvents, "enableLuaEvents", true);
             Scribe_Values.Look(ref useAiIncidentAnnounce, "useAiIncidentAnnounce", true);
             Scribe_Values.Look(ref maxLuaEventsPerDay, "maxLuaEventsPerDay", 0);
+            Scribe_Values.Look(ref maxScriptRetries, "maxScriptRetries", 1);
             Scribe_Values.Look(ref debugLogging, "debugLogging", true);
             Scribe_Values.Look(ref maxLogRecords, "maxLogRecords", 200);
 
@@ -146,7 +172,7 @@ namespace Stellaris.AI
             Scribe_Values.Look(ref enableSocialActions, "enableSocialActions", true);
             Scribe_Values.Look(ref enableSceneActions, "enableSceneActions", true);
             Scribe_Values.Look(ref enableInteractiveActions, "enableInteractiveActions", true);
-            Scribe_Values.Look(ref affectPlayerColonistsSocial, "affectPlayerColonistsSocial", false);
+            Scribe_Values.Look(ref colonistInfluence, "colonistInfluence", InfluenceEverything);
 
             Scribe_Values.Look(ref providerId, "providerId", "deepseek");
             Scribe_Values.Look(ref endpoint, "endpoint", LlmProviderPresets.All[0].Endpoint);
@@ -169,6 +195,7 @@ namespace Stellaris.AI
             minIntervalMinutes = Clamp(minIntervalMinutes, 0, 24 * 60);
             maxApiCallsPerDay = Clamp(maxApiCallsPerDay, 0, 5000);
             maxLuaEventsPerDay = Clamp(maxLuaEventsPerDay, 0, 200);
+            maxScriptRetries = Clamp(maxScriptRetries, 0, 10);
             maxLogRecords = Clamp(maxLogRecords, 20, 1000);
 
             quotaWindow = Clamp(quotaWindow, 1, 50);
@@ -183,6 +210,7 @@ namespace Stellaris.AI
             maxOutputTokens = Clamp(maxOutputTokens, 0, 8000);
             if (maxLookupRounds < 0) maxLookupRounds = 0;
             if (lookupMaxResults < 4) lookupMaxResults = 4;
+            colonistInfluence = Clamp(colonistInfluence, InfluenceNever, InfluenceEverything);
 
             endpoint = (endpoint ?? "").Trim();
             model = (model ?? "").Trim();
@@ -221,6 +249,7 @@ namespace Stellaris.AI
                 enableLuaEvents ? "1" : "0",
                 useAiIncidentAnnounce ? "1" : "0",
                 maxLuaEventsPerDay.ToString(),
+                maxScriptRetries.ToString(),
                 debugLogging ? "1" : "0",
                 maxLogRecords.ToString(),
                 quotaWindow.ToString(),
@@ -238,7 +267,7 @@ namespace Stellaris.AI
                 enableSocialActions ? "1" : "0",
                 enableSceneActions ? "1" : "0",
                 enableInteractiveActions ? "1" : "0",
-                affectPlayerColonistsSocial ? "1" : "0",
+                colonistInfluence.ToString(),
                 providerId ?? "",
                 endpoint ?? "",
                 model ?? "",

@@ -223,15 +223,22 @@ namespace Stellaris.AI
                 letter.optionLabels.Add(label);
             }
 
+            // 直接 new 出来的 Letter 没有经过 LetterMaker，ID 会是 0；
+            // 归档/去重都依赖 ID，这里补一个唯一值。
+            letter.ID = Find.UniqueIDsManager.GetNextLetterID();
             Find.LetterStack.ReceiveLetter(letter);
             return true;
         }
     }
 
     /// <summary>
-    /// 原版 ChoiceLetter 的最小实现：选项走信件栏，选中后把 choice 回传给事件实例。
+    /// 信件栏里的抉择。
     ///
-    /// 为什么要子类化：自绘弹窗会打断玩家的操作；原版信件是"放在那儿，玩家有空再看"。
+    /// 为什么点开后用我们自己的弹窗列选项：原版 <see cref="ChoiceLetter"/> 的选项面板
+    /// 依赖内部的 DiaNode 构造，在 1.7 上行为不可控（实测出现过"点开信但没有任何按钮"）。
+    /// 这里直接复用 0.5.0 起就在用的 <see cref="Dialog_NarrativeChoice"/>：
+    /// 信还是那封信，点开后选项一定在。
+    ///
     /// Scribe 只存 instanceId + 选项文本，读档后照样能把选择投回事件。
     /// </summary>
     public sealed class NarrativeChoiceLetter : ChoiceLetter
@@ -271,6 +278,38 @@ namespace Stellaris.AI
 
         protected override string GetMouseoverText() =>
             string.IsNullOrEmpty(Label) ? "这是一次抉择" : Label;
+
+        /// <summary>点开信件：用我们自己的弹窗列出选项（不依赖原版 ChoiceLetter 的选项面板）。</summary>
+        public override void OpenLetter()
+        {
+            var options = new List<KeyValuePair<string, string>>();
+            for (int i = 0; i < optionIds.Count && i < optionLabels.Count; i++)
+            {
+                options.Add(new KeyValuePair<string, string>(optionIds[i], optionLabels[i]));
+            }
+
+            if (options.Count == 0)
+            {
+                // 理论上不会发生（Validate 要求 2~4 个选项），兜底成一条"知道了"。
+                options.Add(new KeyValuePair<string, string>("ok", "知道了"));
+            }
+
+            NarrativeChoiceLetter letter = this;
+            string instance = instanceId;
+
+            Find.WindowStack.Add(new Dialog_NarrativeChoice(Label, Text, options, choice =>
+            {
+                Find.LetterStack.RemoveLetter(letter);
+
+                var payload = new Dictionary<string, object>
+                {
+                    { "choice", choice },
+                    { "instance_id", instance }
+                };
+
+                EventRuntime.FireSignalTo(instance, "choice_selected", payload);
+            }));
+        }
 
         public override void ExposeData()
         {

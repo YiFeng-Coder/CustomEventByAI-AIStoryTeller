@@ -55,7 +55,7 @@ namespace Stellaris.AI
         private static WriterJob _queuedJob;
         private static bool _warnedNotConfigured;
 
-        // 编剧阶段的修复重试：最多一次，把校验失败原因回喂给模型。
+        // 编剧阶段的修复重试：次数由设置 maxScriptRetries 决定（默认 1），把校验失败原因回喂给模型。
         private static int _writerRetries;
         private static string _lastWriterScript;
         private static string _lastWriterError;
@@ -305,7 +305,10 @@ namespace Stellaris.AI
                                   + ", user=" + user.Length + ")");
             }
 
-            Send(job.Map, job.Forced, Phase.Writing, request, "编剧请求中…（写 Lua）");
+            Send(job.Map, job.Forced, Phase.Writing, request,
+                _writerRetries > 0
+                    ? "编剧请求中…（第 " + (_writerRetries + 1) + " 轮，修正上一版错误）"
+                    : "编剧请求中…（写 Lua）");
             return true;
         }
 
@@ -727,7 +730,7 @@ namespace Stellaris.AI
             }
 
             // 空跑每个能预知的分支（start / 每个选项 / 定时信号）。有 Lua 运行时错误就在这里拦下，
-            // 让编剧带着具体错误重写一次，而不是等玩家点完选项才看到「阶段失败」。
+            // 让编剧带着具体错误重写（重写轮数由 maxScriptRetries 决定），而不是等玩家点完选项才看到「阶段失败」。
             string previewError = EventRuntime.PreviewBranches(definition);
             if (previewError != null)
             {
@@ -772,7 +775,8 @@ namespace Stellaris.AI
         }
 
         /// <summary>
-        /// 脚本被拒：先把原因回喂给模型修一次（只给一次机会），再不行才放弃。
+        /// 脚本被拒：把原因回喂给模型重写，最多重写"玩家在设置里指定的轮数"
+        /// （默认 1 = 只给一次机会，与旧行为一致），再不行才放弃。
         /// 这一步是"模型能不能写对"的关键——不给反馈它会重复同样的错误。
         /// </summary>
         private static void RejectScript(NarratorState state, AINarratorSettings settings, string reason, string lua)
@@ -788,20 +792,30 @@ namespace Stellaris.AI
                     : lua.Substring(0, maxLoggedLength) + "\n...[脚本过长，已截断]");
             }
 
-            if (_writerRetries < 1 && _writerJob != null && CanCallApi(state, settings))
+            int maxRetries = Math.Max(0, settings.maxScriptRetries);
+
+            if (_writerRetries < maxRetries && _writerJob != null && CanCallApi(state, settings))
             {
+                // 先记轮次，让 DispatchWriter 的状态行能显示"第 N 轮"；没发出去再退回去，不算一轮。
                 _writerRetries++;
                 if (DispatchWriter(state, settings))
                 {
-                    Verse.Log.Warning(AINarratorMod.LogPrefix + "script rejected (will retry once): " + details);
+                    Verse.Log.Warning(AINarratorMod.LogPrefix + "script rejected (rewrite round "
+                                       + _writerRetries + "/" + maxRetries + "): " + details);
                     return;
                 }
+
+                _writerRetries--;
             }
 
             state.failStreak++;
             state.lastFailTick = Find.TickManager.TicksGame;
-            LastStatus = "脚本最终被拒：" + reason;
-            Verse.Log.Warning(AINarratorMod.LogPrefix + "script rejected permanently: " + details);
+
+            // 轮数 = 首写 + 实际发出的重写；被拒次数为 0 时也要说清楚是"没重写"。
+            int rounds = 1 + _writerRetries;
+            LastStatus = "脚本最终被拒（共 " + rounds + " 轮）：" + reason;
+            Verse.Log.Warning(AINarratorMod.LogPrefix + "script rejected permanently after "
+                               + rounds + " round(s), retries allowed=" + maxRetries + ": " + details);
         }
 
         /// <summary>编剧槽位空出来了：如果有排队的概念，立刻接上。</summary>

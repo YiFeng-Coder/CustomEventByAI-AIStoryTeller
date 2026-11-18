@@ -56,13 +56,6 @@ namespace Stellaris.AI
             string kind = colon > 0 ? who.Substring(0, colon).Trim().ToLowerInvariant() : "";
             string value = colon > 0 ? who.Substring(colon + 1).Trim() : who;
 
-            if (policy == TargetPolicy.HandleOnly && kind != "handle")
-            {
-                error = "这是危险动作，只能用 who=\"handle:名字\" 指向本事件自己生成的角色，"
-                        + "不能指向地图上已有的角色";
-                return false;
-            }
-
             switch (kind)
             {
                 case "handle":
@@ -110,30 +103,45 @@ namespace Stellaris.AI
 
             switch (policy)
             {
-                case TargetPolicy.HandleOnly:
-                    error = "危险动作不能指向你的殖民者";
-                    return false;
+                case TargetPolicy.Dangerous:
+                    return RequireInfluence(AINarratorSettings.InfluenceEverything,
+                        "伤害 / 击杀 / 精神崩溃", out error);
 
                 case TargetPolicy.NonPlayerOnly:
-                    error = "该动作不能改变你的殖民者的身份 / 特质 / 关系（只对 AI 生成的角色生效）";
-                    return false;
+                    return RequireInfluence(AINarratorSettings.InfluencePsychology,
+                        "特质 / 关系 / 技能 / 派系", out error);
 
                 case TargetPolicy.Neutral:
-                    if (socialCategory && !PlayerSocialAllowed)
-                    {
-                        error = "玩家在设置里关闭了「让心理层影响殖民者」，这一项不能落到你的殖民者身上";
-                        return false;
-                    }
-
-                    return true;
+                    if (!socialCategory) return true;
+                    return RequireInfluence(AINarratorSettings.InfluencePsychology,
+                        "想法 / 心情", out error);
 
                 default:
                     return true;
             }
         }
 
-        private static bool PlayerSocialAllowed =>
-            AINarratorMod.Settings != null && AINarratorMod.Settings.affectPlayerColonistsSocial;
+        /// <summary>
+        /// 玩家在设置里给"AI 对我的殖民者的影响"划的线。
+        /// 这里是硬校验：设置不够就报一条能照着改的错误，而不是静默跳过。
+        /// </summary>
+        private static bool RequireInfluence(int needed, string what, out string error)
+        {
+            error = null;
+
+            int current = AINarratorMod.Settings != null
+                ? AINarratorMod.Settings.colonistInfluence
+                : AINarratorSettings.InfluenceEverything;
+
+            if (current >= needed) return true;
+
+            error = "玩家把「AI 对你的殖民者的影响」设成了「"
+                    + AINarratorSettings.InfluenceLabel(current)
+                    + "」，所以不能用「" + what + "」类动作指向你的殖民者。"
+                    + "允许的话，请在 设置 → 动作库 里改成「"
+                    + AINarratorSettings.InfluenceLabel(needed) + "」或更高。";
+            return false;
+        }
 
         private static bool TryHandle(ActionContext context, string name, out Pawn pawn, out string error)
         {

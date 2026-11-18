@@ -62,7 +62,8 @@ namespace Stellaris.AI
         public TargetPolicy Policy => TargetPolicy.Positive;
 
         public string Describe() =>
-            "story.dialog{title=字符串≤60, text=字符串≤1500} —— 弹一个纯叙事窗口（玩家点右上角关闭），不会卡住事件";
+            "story.dialog{title=字符串≤60, text=字符串≤1500} —— 弹一个纯叙事窗口（模态、会暂停游戏，玩家要手动关闭）；" +
+            "能写信就优先 story.send_letter";
 
         public bool Validate(PlannedAction a, ActionContext ctx, out string error)
         {
@@ -145,11 +146,15 @@ namespace Stellaris.AI
 
             string defName = a.ArgString("thingDef");
             if (defName.Length == 0) { error = "缺少 thingDef"; return false; }
-            if (DefDatabase<ThingDef>.GetNamedSilentFail(defName) == null)
+
+            ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+            if (def == null)
             {
                 error = "不存在的 ThingDef：" + defName;
                 return false;
             }
+
+            if (!SpawnSafety.CanMakeThing(def, out error)) return false;
 
             int count = a.ArgInt("count", 1);
             if (count < 1 || count > 5) { error = "count 必须在 1..5"; return false; }

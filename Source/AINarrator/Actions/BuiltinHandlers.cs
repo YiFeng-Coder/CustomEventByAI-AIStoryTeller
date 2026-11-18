@@ -291,11 +291,16 @@ namespace Stellaris.AI
             error = null;
             string defName = a.ArgString("thingDef");
             if (defName.Length == 0) { error = "缺少 thingDef"; return false; }
-            if (DefDatabase<ThingDef>.GetNamedSilentFail(defName) == null)
+
+            ThingDef thingDef = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+            if (thingDef == null)
             {
                 error = "不存在的 ThingDef：" + defName;
                 return false;
             }
+
+            // 需要材质的定义（墙/家具）不能直接 MakeThing，否则执行到一半会抛异常。
+            if (!SpawnSafety.CanMakeThing(thingDef, out error)) return false;
 
             int count = a.ArgInt("count", 1);
             if (count < 1 || count > 10) { error = "count 必须在 1..10"; return false; }
@@ -386,16 +391,24 @@ namespace Stellaris.AI
 
             for (int i = 0; i < count; i++)
             {
-                IntVec3 cell = CellFinder.RandomEdgeCell(ctx.Map);
-                Pawn pawn = PawnGenerator.GeneratePawn(kind, null);
-                PawnKindSafety.RepairGeneratedPawn(pawn);
-                if (GenSpawn.Spawn(pawn, cell, ctx.Map) == null || !pawn.Spawned)
+                try
                 {
-                    error = "角色生成失败";
+                    IntVec3 cell = CellFinder.RandomEdgeCell(ctx.Map);
+                    Pawn pawn = PawnGenerator.GeneratePawn(kind, null);
+                    PawnKindSafety.RepairGeneratedPawn(pawn);
+                    if (pawn == null || GenSpawn.Spawn(pawn, cell, ctx.Map) == null || !pawn.Spawned)
+                    {
+                        error = "角色生成失败";
+                        return false;
+                    }
+
+                    if (i == 0 && handle.Length > 0) ctx.RegisterHandle(handle, pawn);
+                }
+                catch (Exception e)
+                {
+                    error = "角色生成失败：" + e.Message;
                     return false;
                 }
-
-                if (i == 0 && handle.Length > 0) ctx.RegisterHandle(handle, pawn);
             }
             return true;
         }

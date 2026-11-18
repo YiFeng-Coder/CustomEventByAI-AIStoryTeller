@@ -212,6 +212,11 @@ namespace Stellaris.AI
               .Append("　导演在途：").Append(DirectorLoop.DirectorBusy ? "是" : "否")
               .Append("　编剧在途：").Append(DirectorLoop.WriterBusy ? "是" : "否")
               .Append("　排队概念：").Append(DirectorLoop.HasQueuedConcept ? "1" : "0").Append('\n');
+            sb.Append("殖民者保护：")
+              .Append(AINarratorSettings.InfluenceLabel(AINarratorMod.Settings != null
+                  ? AINarratorMod.Settings.colonistInfluence
+                  : AINarratorSettings.InfluenceEverything))
+              .Append('\n');
             sb.Append("候选总数：").Append(CandidateTable.Count)
               .Append("　动作总数：").Append(ActionRegistry.All.Count)
               .Append("　本次可见：").Append(PromptBuilder.LastMask).Append('\n');

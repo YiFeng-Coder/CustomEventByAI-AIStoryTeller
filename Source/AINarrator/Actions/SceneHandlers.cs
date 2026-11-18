@@ -77,14 +77,63 @@ namespace Stellaris.AI
 
             for (int i = 0; i < count; i++)
             {
-                IntVec3 at = i == 0 ? cell : CellFinder.RandomClosewalkCellNear(cell, map, 5);
-                Thing thing = ThingMaker.MakeThing(def, stuff);
-                if (GenSpawn.Spawn(thing, at, map) == null || !thing.Spawned)
+                if (!TryFindSpot(def, map, cell, out IntVec3 at, out error)) return false;
+
+                try
                 {
-                    error = "未能生成指定建筑";
+                    Thing thing = ThingMaker.MakeThing(def, stuff);
+                    if (GenSpawn.Spawn(thing, at, map) == null || !thing.Spawned)
+                    {
+                        error = "未能生成指定建筑";
+                        return false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    error = "生成建筑失败：" + e.Message;
                     return false;
                 }
             }
+            return true;
+        }
+
+        /// <summary>
+        /// 找一个"整块占地都放得下"的格子。
+        /// 以前直接在锚点 GenSpawn.Spawn：多格建筑（2x2 以上）压到墙/水/别人身上会抛异常，
+        /// 而那时预算已扣、前面的建筑已经落地，属于"执行到一半崩掉"。
+        /// </summary>
+        private static bool TryFindSpot(ThingDef def, Map map, IntVec3 near, out IntVec3 cell, out string error)
+        {
+            error = null;
+            cell = IntVec3.Invalid;
+
+            foreach (IntVec3 candidate in GenRadial.RadialCellsAround(near, 6f, true))
+            {
+                if (!CanPlace(def, map, candidate)) continue;
+                cell = candidate;
+                return true;
+            }
+
+            error = "找不到能放下 " + def.defName + " 的空地（可能被建筑/地形挡住）";
+            return false;
+        }
+
+        private static bool CanPlace(ThingDef def, Map map, IntVec3 cell)
+        {
+            CellRect rect = GenAdj.OccupiedRect(cell, Rot4.North, def.Size);
+            foreach (IntVec3 c in rect)
+            {
+                if (!c.InBounds(map)) return false;
+                if (c.GetEdifice(map) != null) return false;
+
+                TerrainDef terrain = c.GetTerrain(map);
+                if (def.terrainAffordanceNeeded != null &&
+                    (terrain == null || !terrain.affordances.Contains(def.terrainAffordanceNeeded)))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
     }
@@ -326,18 +375,27 @@ namespace Stellaris.AI
             for (int i = 0; i < count; i++)
             {
                 IntVec3 at = CellFinder.RandomClosewalkCellNear(cell, map, 8);
-                Pawn animal = PawnGenerator.GeneratePawn(kind, null);
-                PawnKindSafety.RepairGeneratedPawn(animal);
-                if (GenSpawn.Spawn(animal, at, map) == null || !animal.Spawned)
-                {
-                    error = "未能生成指定动物";
-                    return false;
-                }
 
-                if (manhunter && animal.mindState?.mentalStateHandler?.TryStartMentalState(
-                        MentalStateDefOf.Manhunter, "被剧情激怒", true) != true)
+                try
                 {
-                    error = "动物未能进入猎杀人类状态";
+                    Pawn animal = PawnGenerator.GeneratePawn(kind, null);
+                    PawnKindSafety.RepairGeneratedPawn(animal);
+                    if (animal == null || GenSpawn.Spawn(animal, at, map) == null || !animal.Spawned)
+                    {
+                        error = "未能生成指定动物";
+                        return false;
+                    }
+
+                    // 猎杀状态失败不该让整段脚本作废：动物已经生成，记为警告即可。
+                    if (manhunter && animal.mindState?.mentalStateHandler?.TryStartMentalState(
+                            MentalStateDefOf.Manhunter, "被剧情激怒", true) != true)
+                    {
+                        Verse.Log.Warning(AINarratorMod.LogPrefix + "manhunter state failed for " + kind.defName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    error = "生成动物失败：" + e.Message;
                     return false;
                 }
             }
