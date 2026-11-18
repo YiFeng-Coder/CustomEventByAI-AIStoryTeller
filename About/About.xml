@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>AI Narrator</name>
+  <author>Feng</author>
+  <packageId>Feng.AINarrator</packageId>
+  <modVersion>0.6.0</modVersion>
+  <supportedVersions>
+    <li>1.7</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+    </li>
+    <li>
+      <packageId>Feng.RimLua</packageId>
+      <displayName>RimLua</displayName>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>Feng.RimLua</li>
+  </loadAfter>
+  <description>AI 叙述者：由外部大语言模型担任叙事导演，自主决定何时发事件，并可用 Lua 现场编写多阶段剧情（信件、选项、分支、定时器）。0.6.0 起动作库扩展到 42 个：除叙事与地图外，还能改变角色的想法与关系、留下可见的现场（废墟/血迹/兽群），并给出叙事目标。模型供应商、模型与调用预算由玩家自行配置。</description>
+</ModMetaData>
