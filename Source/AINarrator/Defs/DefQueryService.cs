@@ -5,7 +5,7 @@ using System.Text.Json;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>一次 Def 查询请求。字段全部是纯数据，可从 JSON 解析。</summary>
     public sealed class DefLookupRequest

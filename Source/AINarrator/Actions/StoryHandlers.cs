@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     // ─────────────────────────────────────────────────────────────────────────
     // story.message —— 屏幕顶部小提示（不打断、不进信件栏）

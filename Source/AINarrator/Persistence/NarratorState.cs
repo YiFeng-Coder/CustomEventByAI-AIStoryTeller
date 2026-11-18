@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>已批准、等待到点发射的事件。</summary>
     public class PendingEventRecord

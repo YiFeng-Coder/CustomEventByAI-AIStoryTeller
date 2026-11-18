@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 脚本静态体检。

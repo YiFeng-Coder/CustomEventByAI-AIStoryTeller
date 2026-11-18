@@ -3,7 +3,7 @@ using RimLua;
 using RimLua.Api;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 注册给 Lua 的宿主函数，位于 <c>rim.aist.*</c>。

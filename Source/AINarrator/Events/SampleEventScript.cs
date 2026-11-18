@@ -2,7 +2,7 @@ using System.Text;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 内置示例事件脚本。

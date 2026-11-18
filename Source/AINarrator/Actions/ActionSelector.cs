@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 提示词里的"动作可见性"裁剪。

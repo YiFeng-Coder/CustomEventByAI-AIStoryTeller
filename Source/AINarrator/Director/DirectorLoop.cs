@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 导演主循环。额度和事件状态只在主线程读写。
@@ -66,7 +66,7 @@ namespace Stellaris.AI
         private static LookupSession _writerLookup;
 
         public static bool IsActiveStoryteller =>
-            Current.Game != null && Find.Storyteller?.def?.defName == "Stellaris_AINarrator";
+            Current.Game != null && Find.Storyteller?.def?.defName == "CustomEventByAI_AIStoryTeller";
         public static bool InFlight => DirectorBusy || WriterBusy;
         public static bool WriterBusy => _writerRequest != null;
         public static bool DirectorBusy => _directorRequest != null;

@@ -4,7 +4,7 @@ using System.Text;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>脚本里声明的一个句柄：Lua 只看到名字，C# 侧映射到真实 Thing。</summary>
     public class HandleRecord

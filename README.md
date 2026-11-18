@@ -1,9 +1,10 @@
-# AI Narrator（AI 叙述者）
+# CustomEventByAI-AIStoryTeller（AI 故事叙述者）
 
 由外部大语言模型担任"叙事导演"的 RimWorld 模组：模型自己决定何时出事、出什么事，并可用 Lua 现场编写多阶段剧情（信件、选项、分支、定时器）。
 
+- **显示名**：`CustomEventByAI-AIStoryTeller`（旧名 AI Narrator；本次同时更换了命名空间与 DefName，旧存档不兼容）
 - **PackageId**：`Feng.AINarrator`
-- **版本**：0.6.0
+- **版本**：0.6.4
 - **支持游戏版本**：RimWorld 1.7
 - **前置**：Harmony、RimLua（`Feng.RimLua`）
 
@@ -25,7 +26,7 @@
 
 1. 将本目录整个放入 `RimWorld/Mods/AIIncidents`。
 2. 确认已安装 Harmony 与 RimLua。
-3. 启动游戏，在"选项 → 模组设置 → AI Narrator"里填入模型供应商与 API Key。
+3. 启动游戏，在"选项 → 模组设置 → AI StoryTeller"里填入模型供应商与 API Key。
 
 `LoadFolders.xml` 会把根目录与 `1.7/` 一起加载，预编译程序集位于 `1.7/Assemblies/AINarrator.dll`。
 
@@ -34,11 +35,11 @@
 | 路径 | 说明 |
 | --- | --- |
 | `About/` | 模组元数据（`About.xml`） |
-| `Defs/` | 叙述者 Def（`Stellaris_AINarrator.xml`，默认英文） |
+| `Defs/` | 叙述者 Def（`CustomEventByAI_AIStoryTeller.xml`，默认英文） |
 | `Languages/` | 语言文件（`English/`、`ChineseSimplified/`） |
 | `tools/check_loc.py`、`tools/check_cjk.py` | 本地化自检脚本 |
 | `1.7/Assemblies/` | 编译输出 `AINarrator.dll` |
-| `Source/AINarrator/` | C# 源码（net10.0，命名空间 `Stellaris.AI`） |
+| `Source/AINarrator/` | C# 源码（net10.0，命名空间 `CustomEventByAI.AIStoryTeller`） |
 | `tools/` | 构建与文档工具 |
 | `Docs/` | 设计与交付文档（Markdown + Word） |
 

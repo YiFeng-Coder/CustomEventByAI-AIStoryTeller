@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using MoonSharp.Interpreter;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// Lua 表 ↔ JSON 的桥。

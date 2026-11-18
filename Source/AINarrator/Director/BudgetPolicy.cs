@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 配额与去重。数值全部来自玩家设置，**代码里不写死**；0 一律表示不限制。

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 事件运行时：驱动"定义 → 实例 → 阶段执行 → 动作落地 → 定时器/信号"这条链。

@@ -1,7 +1,7 @@
 using HarmonyLib;
 using RimWorld;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 兜底：早期版本允许 pawn.spawn 直接生成任何 PawnKindDef 子类。某些子类

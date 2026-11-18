@@ -2,15 +2,15 @@
 <Defs>
 
   <!--
-    AI 叙述者。
+    AI 故事叙述者（产品名 CustomEventByAI-AIStoryTeller）。
     设计约定：
       * 威胁类事件（ThreatSmall / ThreatBig）不挂任何原版 MTB comp —— 完全由 AI 决定；
       * 疾病、商队、访客、任务、轨道商船等"环境类"事件保留原版 comp，避免 AI 掉线时殖民地彻底停摆；
       * AI 的健康度由 StorytellerComp_AINarrator 自己判断，连续失败会自然进入休整。
   -->
   <StorytellerDef ParentName="BaseStoryteller">
-    <defName>Stellaris_AINarrator</defName>
-    <label>AI Narrator</label>
+    <defName>CustomEventByAI_AIStoryTeller</defName>
+    <label>AI StoryTeller</label>
     <description>A large language model serves as your colony's narrative director. It reads the state of the colony, decides for itself when to send an incident and when to hold back, and can write multi-stage storylines on the spot.</description>
     <portraitLarge>UI/HeroArt/Storytellers/RandyRandom</portraitLarge>
     <portraitTiny>UI/HeroArt/Storytellers/RandyRandomTiny</portraitTiny>
@@ -18,7 +18,7 @@
     <comps>
 
       <!-- ★ 我们的导演 comp（P0 阶段只负责占位与日志，不产生事件） -->
-      <li Class="Stellaris.AI.StorytellerCompProperties_AINarrator">
+      <li Class="CustomEventByAI.AIStoryTeller.StorytellerCompProperties_AINarrator">
         <aiMtbDays>1.5</aiMtbDays>
         <tickInterval>60</tickInterval>
       </li>

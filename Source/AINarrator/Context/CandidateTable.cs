@@ -4,7 +4,7 @@ using System.Text;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>候选表里的一项。缓存字符串，避免每次拼 prompt 时反射。</summary>
     public sealed class IncidentCandidate

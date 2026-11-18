@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     // ─────────────────────────────────────────────────────────────────────────
     // map.building —— 废墟、墙体、路障

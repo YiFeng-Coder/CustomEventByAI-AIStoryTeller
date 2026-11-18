@@ -4,7 +4,7 @@ using System.Text;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>动作执行时的上下文。全部是主线程对象，禁止传给 Lua。</summary>
     public sealed class ActionContext

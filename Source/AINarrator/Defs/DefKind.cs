@@ -4,7 +4,7 @@ using System.Text;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 一条可查询的 Def。索引里只存渲染/匹配需要的字段，不把 Def 对象交给 Lua。

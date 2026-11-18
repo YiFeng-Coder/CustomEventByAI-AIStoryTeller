@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>单个殖民者的最小可见信息。只放对"该不该出事"有用的字段。</summary>
     public class PawnBrief

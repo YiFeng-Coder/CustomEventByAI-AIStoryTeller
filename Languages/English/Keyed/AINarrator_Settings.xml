@@ -2,7 +2,7 @@
 <LanguageData>
 
   <!-- ═══════════ Shared ═══════════ -->
-  <AI_Name>AI Narrator</AI_Name>
+  <AI_Name>AI StoryTeller</AI_Name>
   <AI_Common_Unlimited>Unlimited</AI_Common_Unlimited>
   <AI_Common_NotSet>(not set)</AI_Common_NotSet>
   <AI_Common_AtLeast>≥{0}</AI_Common_AtLeast>
@@ -21,11 +21,11 @@
   <AI_Unit_Minutes>min</AI_Unit_Minutes>
 
   <!-- ═══════════ Settings window ═══════════ -->
-  <AI_Settings_Title>AI Narrator</AI_Settings_Title>
+  <AI_Settings_Title>AI StoryTeller</AI_Settings_Title>
   <AI_Settings_ResetDefaults>Restore narrative defaults</AI_Settings_ResetDefaults>
   <AI_Settings_OpenDebug>Debug window</AI_Settings_OpenDebug>
   <AI_Settings_Save>Save settings</AI_Settings_Save>
-  <AI_Settings_Saved>AI Narrator settings saved.</AI_Settings_Saved>
+  <AI_Settings_Saved>AI StoryTeller settings saved.</AI_Settings_Saved>
 
   <!-- Provider -->
   <AI_Settings_SectionProvider>— Model provider —</AI_Settings_SectionProvider>

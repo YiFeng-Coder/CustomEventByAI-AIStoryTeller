@@ -1,4 +1,4 @@
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 一家 OpenAI 兼容服务商的预置。

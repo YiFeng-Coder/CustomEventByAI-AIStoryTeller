@@ -1,7 +1,7 @@
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// PawnKindDef 的通用安全边界。

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>AI Narrator</name>
+  <name>CustomEventByAI-AIStoryTeller</name>
   <author>Feng</author>
   <packageId>Feng.AINarrator</packageId>
   <modVersion>0.6.4</modVersion>
@@ -22,5 +22,71 @@
     <li>brrainz.harmony</li>
     <li>Feng.RimLua</li>
   </loadAfter>
-  <description>AI Narrator: an external large language model acts as your colony's narrative director. It decides on its own when to fire incidents, and can write multi-stage storylines in Lua on the spot (letters, choices, branches, timers). Since 0.6.0 the action library has grown to 42 actions: beyond narrative and map effects, the AI can change a pawn's thoughts and relationships, leave visible traces on the map (ruins, blood, animal herds), and set narrative objectives. The provider, model and call budget are all up to the player.</description>
+  <description>An LLM storyteller for RimWorld 1.7.
+
+WHAT IT DOES
+This mod adds a storyteller whose narrative director is a large language model of your choice. It does not use fixed MTB tables. Each cycle it reads a live snapshot — day, biome, weather, wealth, threat points, food, colonists (mood, injuries, mental state, skills) and recent incidents — and decides: rest, fire a vanilla incident, or write an original story.
+
+HOW IT WORKS
+1. Director call: the model returns JSON — no_event (rest), vanilla_incident (intensity multiplier plus an AI-written letter body), or lua_event (a story concept).
+2. Writer call: for lua_event, a second, tightly specified prompt asks for a sandboxed Lua 5.2 script with stages, branches, choices and timers.
+3. Runtime: the script is compiled in an isolated VM, linted, dry-run on every predictable branch, then run stage by stage (start → choice_selected → game_timer_due). State, timers and handles persist; each opId runs once; up to 6 stories are active and idle ones expire after 5 in-game days. Limits: 64 KB of source, 32 actions per stage, 40 ms / 4000 instructions per slice. Scripts cannot touch game objects, files, the network or other mods; they can only read a snapshot and return actions.
+
+42 ACTIONS IN 8 GROUPS
+Narrative (letters, dialogs, choices, messages, memories, highlights, rewards), spawning (items, pawns, vanilla incidents), map (weather, conditions, drop pods, plants, corpses, fire, explosions), pawns (injury, healing, gear, skills, death, recruitment), psychology and relationships (thoughts, mood, inspirations, traits, relations, mental breaks), scenes (buildings, terrain, roofs, filth, animals, clearing, collapses), interaction (objectives, camera focus, choice letters) and world (goodwill, research, quests). Positions use semantic anchors (center, storage, water, ore, map edge, random, handle); targets use handle:p1, colonist:Name, best:Shooting or worst:Mood.
+
+SAFETY AND PLAYER CONTROL
+- Whole-stage validation: one invalid action rejects the entire stage.
+- Per-story budgets: spawning 40, danger 3, pawn editing 8, social 6, world 2.
+- Quotas and cooldowns: category caps over the last N incidents, a consecutive-threat limit, and a repeat window.
+- "Influence on your colonists": None / Psychology only / Everything, enforced by the validator.
+- The social, scene and interactive groups can be disabled; short/long stories are a switch; daily API calls can be capped; rejected scripts are re-sent with the error for configurable retries.
+- Network calls are asynchronous and never block the game; director and writer have independent slots.
+
+MULTI-MOD FRIENDLY DEF LOOKUP
+Instead of hard-coded Def lists, the mod indexes the Defs actually loaded and shows counts plus samples. The model can query what it needs (LOOKUP rounds) or write @category/keyword, e.g. @item/medicine. Near-miss names are corrected when unambiguous (Infection → WoundInfection); a real miss returns the names that exist. Large mod lists work without whitelists.
+
+PROVIDERS AND PRIVACY
+Works with any OpenAI-compatible endpoint; presets cover DeepSeek, OpenAI, Moonshot Kimi, Zhipu GLM, Alibaba Qwen, SiliconFlow, OpenRouter, Ollama, Groq, LM Studio and custom. Model, temperature, timeouts and output limit are configurable. The API key stays local; requests go straight to your provider, and local models need no key.
+
+LOCALIZATION AND DEBUGGING
+English is the default and Simplified Chinese is included; prompts and stories follow the game language. The debug window can request a decision, force the writer, inject a sample or demo (no API cost), inspect prompts and replies.
+
+REQUIREMENTS
+RimWorld 1.7, Harmony and RimLua (Feng.RimLua). Choose AI StoryTeller as your storyteller. Vanilla disease, caravans, visitors, quests and orbital traders keep their schedulers, so the colony lives even offline. This release renames the mod's internal identifiers, so saves created under the old name are not compatible.
+
+中文
+
+用大语言模型担任 RimWorld 1.7 的叙述者。
+
+它做了什么
+本模组新增一位叙述者，把叙事导演交给玩家自选的大模型。它不按固定 MTB 触发，而是每轮读取殖民地快照——天数、生物群系、天气、财富、威胁点数、食物、殖民者的心情 / 伤势 / 精神状态 / 技能，以及最近事件——再决定：休整、触发原版事件，或现场写原创剧情。
+
+一次决策怎么产生
+1. 导演调用：模型返回 JSON——no_event（休整）、vanilla_incident（强度倍率 + AI 撰写的信件正文）或 lua_event（剧情概念）。
+2. 编剧调用：选择 lua_event 时，第二次调用用严格契约让模型写沙箱 Lua 5.2 脚本，支持多阶段、分支、选项与定时器。
+3. 运行时：脚本在独立 VM 中编译、体检、空跑可预知分支，再逐阶段执行（start → choice_selected → game_timer_due）。状态、定时器与句柄随存档保存；每个 opId 至多执行一次；最多 6 条剧情同时活跃，闲置 5 游戏日回收。硬限制：脚本 ≤ 64 KB、单阶段 ≤ 32 条动作、40 ms / 4000 条指令。脚本拿不到游戏对象、文件、网络或其他模组接口，只能读快照并返回动作清单。
+
+8 组 42 个动作
+叙事（信件、叙事窗口、选项、消息、记忆、高亮、奖励）、生成（物品、角色、原版事件）、地图（天气、状况、空投、植物、尸体、火焰、爆炸）、角色（受伤、治疗、装备、技能、死亡、招募）、心理与关系（想法、心情、灵感、特质、关系、精神崩溃）、场景（建筑、地形、屋顶、污渍、动物、清除、塌方）、交互（叙事目标、镜头、信件抉择）、世界（派系好感、研究、任务）。位置用语义锚点（center / storage / water / ore / 地图边缘 / random / handle）描述；目标用 handle:p1、colonist:名字、best:射击、worst:Mood。
+
+安全与玩家控制
+- 整段校验：一条动作非法就拒绝整个阶段。
+- 每条剧情的预算：生成 40、危险 3、角色编辑 8、社交 6、世界 2。
+- 配额与冷却：最近 N 个事件的类别上限、连续威胁上限、同一事件的重复窗口。
+- "AI 对你的殖民者的影响"三档：不允许 / 仅心理层 / 全部，由校验器强制执行。
+- 心理、场景、交互三组可分别关闭；短线 / 长线可切换；每日 API 调用可设上限；脚本被拒后带回错误重写，轮数可配。
+- 网络请求异步，不阻塞游戏；导演与编剧各有独立槽位。
+
+多模组友好的 Def 检索
+不再写死 Def 名单：为实际加载的 Def 建索引，只给总数与示例；模型可按需查询（LOOKUP）或写 @类别/关键词（如 @item/药）。名字接近且唯一时自动纠正（Infection → WoundInfection）；不存在时列出真实名字。上百个模组也不需要白名单。
+
+服务商与隐私
+兼容任何 OpenAI 兼容接口，内置 DeepSeek、OpenAI、Kimi、智谱 GLM、通义千问、硅基流动、OpenRouter、Ollama、Groq、LM Studio 与自定义接口；模型、温度、超时、输出上限可调。API Key 只存在本地设置里，不随模组分发；请求直接发往服务商，本地模型无需 Key。
+
+本地化与调试
+默认英文，内置简体中文；提示词与剧情跟随游戏语言。调试窗可立即请求一次、强制编剧、注入示例 / 演示（不耗 API）、查看提示词与回复。
+
+前置与说明
+需要 RimWorld 1.7、Harmony 与 RimLua（Feng.RimLua）。开局选择 AI 故事叙述者（AI StoryTeller）。原版的疾病、商队、访客、任务与轨道商船保持原版节奏，AI 离线也不会停摆。本次同时更换了内部标识，旧命名版本的存档不兼容。</description>
 </ModMetaData>

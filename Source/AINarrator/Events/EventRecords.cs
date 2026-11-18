@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>AI 写好的一份事件脚本（可复用）。</summary>
     public class EventDefinitionRecord

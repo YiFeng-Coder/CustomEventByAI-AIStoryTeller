@@ -1,7 +1,7 @@
 using System;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// AI 叙述者设置。

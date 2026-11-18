@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 编剧侧的查询协议：单独一行 <c>LOOKUP: {...}</c>。

@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     public enum LlmErrorKind
     {

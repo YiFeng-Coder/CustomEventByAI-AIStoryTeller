@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using MoonSharp.Interpreter;
 using RimLua;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     public sealed class StageOutcome
     {

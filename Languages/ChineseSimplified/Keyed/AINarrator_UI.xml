@@ -4,7 +4,7 @@
   <AI_Choice_Title>抉择</AI_Choice_Title>
 
   <!-- ═══════════ 调试窗 ═══════════ -->
-  <AI_Debug_Title>AI 叙述者 · 调试</AI_Debug_Title>
+  <AI_Debug_Title>AI 故事叙述者 · 调试</AI_Debug_Title>
   <AI_Debug_RequestOnce>立即请求一次</AI_Debug_RequestOnce>
   <AI_Debug_ForceWriter>强制写 Lua 剧情</AI_Debug_ForceWriter>
   <AI_Debug_InjectSample>注入示例事件</AI_Debug_InjectSample>

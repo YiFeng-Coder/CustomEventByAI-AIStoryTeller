@@ -1,7 +1,7 @@
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// "能不能直接 MakeThing/生成"的公共检查。

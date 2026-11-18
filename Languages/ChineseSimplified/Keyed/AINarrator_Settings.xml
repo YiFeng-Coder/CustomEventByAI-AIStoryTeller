@@ -2,7 +2,7 @@
 <LanguageData>
 
   <!-- ═══════════ 公共 ═══════════ -->
-  <AI_Name>AI 叙述者</AI_Name>
+  <AI_Name>AI 故事叙述者</AI_Name>
   <AI_Common_Unlimited>不限制</AI_Common_Unlimited>
   <AI_Common_NotSet>(未填)</AI_Common_NotSet>
   <AI_Common_AtLeast>≥{0}</AI_Common_AtLeast>
@@ -21,11 +21,11 @@
   <AI_Unit_Minutes>分钟</AI_Unit_Minutes>
 
   <!-- ═══════════ 设置页 ═══════════ -->
-  <AI_Settings_Title>AI 叙述者</AI_Settings_Title>
+  <AI_Settings_Title>AI 故事叙述者</AI_Settings_Title>
   <AI_Settings_ResetDefaults>恢复默认参数</AI_Settings_ResetDefaults>
   <AI_Settings_OpenDebug>调试窗口</AI_Settings_OpenDebug>
   <AI_Settings_Save>保存设置</AI_Settings_Save>
-  <AI_Settings_Saved>AI 叙述者设置已保存</AI_Settings_Saved>
+  <AI_Settings_Saved>AI 故事叙述者设置已保存</AI_Settings_Saved>
 
   <!-- 服务商 -->
   <AI_Settings_SectionProvider>—— 模型服务商 ——</AI_Settings_SectionProvider>

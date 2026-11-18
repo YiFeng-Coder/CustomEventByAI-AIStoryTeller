@@ -2,7 +2,7 @@ using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     // ─────────────────────────────────────────────────────────────────────────
     // faction.goodwill

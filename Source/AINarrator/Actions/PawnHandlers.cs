@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     // ─────────────────────────────────────────────────────────────────────────
     // pawn.hurt —— 给角色加一个状态（外伤必须落在具体部位）

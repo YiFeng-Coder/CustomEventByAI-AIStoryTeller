@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     // ─────────────────────────────────────────────────────────────────────────
     // story.objective —— 给长线事件一个"目标 + 期限"，并每天提醒一次

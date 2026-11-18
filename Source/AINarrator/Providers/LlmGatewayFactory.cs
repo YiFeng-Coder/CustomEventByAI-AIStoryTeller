@@ -1,6 +1,6 @@
 using System;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     public static class LlmGatewayFactory
     {

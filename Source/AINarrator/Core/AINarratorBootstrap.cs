@@ -1,7 +1,7 @@
 using System;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// Def 装载完成后的补建入口。

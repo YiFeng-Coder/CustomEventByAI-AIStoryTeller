@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <AssemblyName>AINarrator</AssemblyName>
-    <RootNamespace>Stellaris.AI</RootNamespace>
+    <RootNamespace>CustomEventByAI.AIStoryTeller</RootNamespace>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\1.7\Assemblies\</OutputPath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -40,11 +40,11 @@
     </Reference>
     <!-- RimLua：P2 的 Lua 事件运行时；MoonSharp 是 RimLua 依赖的解释器，需要 Table 类型 -->
     <Reference Include="RimLua">
-      <HintPath>$(GameDir)\Mods\AIStory\1.7\Assemblies\RimLua.dll</HintPath>
+      <HintPath>$(GameDir)\Mods\RimLua\1.7\Assemblies\RimLua.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="MoonSharp.Interpreter">
-      <HintPath>$(GameDir)\Mods\AIStory\1.7\Assemblies\MoonSharp.Interpreter.dll</HintPath>
+      <HintPath>$(GameDir)\Mods\RimLua\1.7\Assemblies\MoonSharp.Interpreter.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

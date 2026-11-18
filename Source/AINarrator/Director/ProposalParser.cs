@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using RimWorld;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     public enum ProposalKind
     {

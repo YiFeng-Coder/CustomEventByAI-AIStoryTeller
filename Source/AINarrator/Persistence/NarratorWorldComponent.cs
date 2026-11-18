@@ -2,7 +2,7 @@ using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 叙述者持久状态。整包 JSON 存一个字符串字段，内部再带 schemaVersion。

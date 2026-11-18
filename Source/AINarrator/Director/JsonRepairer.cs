@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// 从模型输出里"捞"出 JSON 对象，并做最小修复。

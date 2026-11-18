@@ -1,7 +1,7 @@
 using RimWorld;
 using Verse;
 
-namespace Stellaris.AI
+namespace CustomEventByAI.AIStoryTeller
 {
     /// <summary>
     /// AI 导演的故事叙述者组件属性。

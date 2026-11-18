@@ -122,8 +122,8 @@ foreach ($name in $gameRefs) {
 
 $optionalRefs = @(
     (Join-Path $GameDir "Mods\Harmony\Current\Assemblies\0Harmony.dll"),
-    (Join-Path $GameDir "Mods\AIStory\1.7\Assemblies\RimLua.dll"),
-    (Join-Path $GameDir "Mods\AIStory\1.7\Assemblies\MoonSharp.Interpreter.dll")
+    (Join-Path $GameDir "Mods\RimLua\1.7\Assemblies\RimLua.dll"),
+    (Join-Path $GameDir "Mods\RimLua\1.7\Assemblies\MoonSharp.Interpreter.dll")
 )
 foreach ($full in $optionalRefs) {
     if (Test-Path $full) { $lines.Add('/r:"' + $full + '"') }
